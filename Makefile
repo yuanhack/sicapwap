@@ -29,13 +29,14 @@
 
 CC = gcc 
 
-#LDFLAGS = -lssl -lcrypto -lpthread -ldl -D_REENTRANT
+LDFLAGS = -lssl -lcrypto -lpthread -ldl -D_REENTRANT
 #LDFLAGS = /usr/lib/libefence.a ./static/libssl.a ./static/libcrypto.a -lpthread -ldl -D_REENTRANT
-LDFLAGS = ./static/libssl.a ./static/libcrypto.a -lpthread -ldl -D_REENTRANT
+#LDFLAGS = ./static/libssl.a ./static/libcrypto.a -lpthread -ldl -D_REENTRANT
 
-CFLAGS = -Wall -g -O0 -D_REENTRANT -I./include/ #-DCW_NO_DTLS
+CFLAGS = -Wall -g -O0 -D_REENTRANT #-DCW_NO_DTLS
 
-OPENSSL_INCLUDE = #-I/usr/local/ssl/include/ #Openssl include files
+#OPENSSL_INCLUDE = #-I/usr/local/ssl/include/ #Openssl include files
+OPENSSL_INCLUDE = -I ./include/openssl #Openssl include files
 
 # Memory leak
 #LDFLAGS += ../dmalloc-5.5.0/libdmallocth.a
