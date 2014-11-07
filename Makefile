@@ -33,7 +33,7 @@ LDFLAGS = -lssl -lcrypto -lpthread -ldl -D_REENTRANT
 #LDFLAGS = /usr/lib/libefence.a ./static/libssl.a ./static/libcrypto.a -lpthread -ldl -D_REENTRANT
 #LDFLAGS = ./static/libssl.a ./static/libcrypto.a -lpthread -ldl -D_REENTRANT
 
-CFLAGS = -Wall -g -O0 -D_REENTRANT #-DCW_NO_DTLS
+CFLAGS = -Wall -g -O0 -D_REENTRANT -DCW_NO_DTLS -DCW_NO_DTLSCWParseConfigurationUpdateRequest
 
 #OPENSSL_INCLUDE = #-I/usr/local/ssl/include/ #Openssl include files
 OPENSSL_INCLUDE = -I ./include/openssl #Openssl include files

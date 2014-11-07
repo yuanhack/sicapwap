@@ -148,7 +148,14 @@ static int memory_write(BIO *b, const char *in, int inl)
 	BIO_memory_data* pData = (BIO_memory_data*)b->ptr;
 	
 	//
-	strBuffer[0] = (char)(CW_PROTOCOL_VERSION << 4) | (char)(CW_PACKET_CRYPT);
+	strBuffer[0] = (char)(CW_PROTOCOL_VERSION << 4) | 
+	(char)(
+#ifdef CW_NO_DTLS
+	CW_PACKET_PLAIN
+#else
+	CW_PACKET_CRYPT
+#endif
+	);
 	strBuffer[1] = strBuffer[2] = strBuffer[3] = 0;
 
 	//

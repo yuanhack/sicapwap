@@ -179,9 +179,7 @@ CWBool CWAssembleJoinResponse(CWProtocolMessage **messagesPtr,
 
 	current=msgElemList;
 	for (i=0; i<msgElemCount; i++) {
-
-                switch (((CWMsgElemData *) (current->data))->type) {
-
+		switch (((CWMsgElemData *) (current->data))->type) {
 			case CW_MSG_ELEMENT_AC_IPV4_LIST_CW_TYPE:
 				if (!(CWAssembleMsgElemACIPv4List(&(msgElems[++k]))))
 					goto cw_assemble_error;	
@@ -220,7 +218,12 @@ CWBool CWAssembleJoinResponse(CWProtocolMessage **messagesPtr,
 				msgElemCount + mandatoryMsgElemCount,
 				msgElemsBinding,
 				msgElemBindingCount,
-				CW_PACKET_CRYPT)))
+#ifdef CW_NO_DTLS
+	CW_PACKET_PLAIN
+#else
+	CW_PACKET_CRYPT
+#endif
+				)))
 		return CW_FALSE;
 
 	CWDebugLog("Join Response Assembled");

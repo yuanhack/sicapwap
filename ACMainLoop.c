@@ -151,6 +151,7 @@ void CWACManageIncomingPacket(CWSocket sock,
 
 		CWLockSafeList(wtpPtr->packetReceiveList);
 		CWAddElementToSafeListTail(wtpPtr->packetReceiveList, pData, readBytes);
+		CWLog(" * CWACManageIncomingPacket -> CWManageWTP packetReceiveList"); // Yuan Hong
 		CWUnlockSafeList(wtpPtr->packetReceiveList);		
 	} else { 
 		/* unknown WTP */
@@ -417,7 +418,6 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 	if(gCWForceMTU > 0) gWTPs[i].pathMTU = gCWForceMTU;
 
 	CWDebugLog("Path MTU for this Session: %d",  gWTPs[i].pathMTU);
-	
 	CW_REPEAT_FOREVER
 	  {
 		int readBytes;
@@ -434,7 +434,8 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 		       (CWGetCountElementFromSafeList(gWTPs[i].packetReceiveList) == 0) &&
 		       (gWTPs[i].interfaceCommand == NO_CMD)) {
 
-			 /*TODO: Check system */
+            CWLog(" * CWManageWTP while wait Data or CMD"); // Yuan Hong
+            /*TODO: Check system */
 			CWWaitThreadCondition(&gWTPs[i].interfaceWait, 
 					      &gWTPs[i].interfaceMutex);
 		}

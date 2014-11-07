@@ -70,7 +70,9 @@ CWBool ACEnterDataCheck(int WTPIndex, CWProtocolMessage *msgPtr) {
 						seqNum))) { 
 		return CW_FALSE;
 	}
-	
+
+	// Yuan Hong
+	//  可在发送前组包 <特定供应商配置信息> 
 	if(!CWACSendFragments(WTPIndex)) {
 
 		return CW_FALSE;
@@ -214,7 +216,12 @@ CWBool CWAssembleChangeStateEventResponse(CWProtocolMessage **messagesPtr,
 			       msgElemCount,
 			       msgElemsBinding,
 			       msgElemBindingCount,
-			       CW_PACKET_CRYPT))) 
+#ifdef CW_NO_DTLS
+							CW_PACKET_PLAIN
+#else
+							CW_PACKET_CRYPT
+#endif
+			       ))) 
 		return CW_FALSE;
 	
 	CWDebugLog("Change State Event Response Assembled");	

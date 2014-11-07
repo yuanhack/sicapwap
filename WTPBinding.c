@@ -82,7 +82,9 @@ CWBool CWWTPInitBinding(int radioIndex)
 		/*	
 		 * Donato Capitella - TO_REMOVE_DEVELOP
 		 * Commented the following lines just to make the WTP work in a test machine.
- 	 	 */
+ 	 	 */ 
+ 	 	 // Yuan Hong
+ 	 	 /*
 		 if(!get_cwmin(sock, &wrq, CWTranslateQueueIndex(i), 0)){return CW_FALSE;}
 		aux->qosValues[i].cwMin = wrq.u.param.value;
 
@@ -91,6 +93,7 @@ CWBool CWWTPInitBinding(int radioIndex)
 
 		if(!get_aifs(sock, &wrq, CWTranslateQueueIndex(i), 0)){return CW_FALSE;}
 		aux->qosValues[i].AIFS = wrq.u.param.value;
+		// */
 
 /*##		aux->qosValues[i].cwMin = 2;
 		aux->qosValues[i].cwMax = 4;

@@ -536,7 +536,7 @@ CW_THREAD_RETURN_TYPE CWInterface(void* arg)
 	 ************************************/
 	
 	if (  bind(listen_sock, (struct sockaddr *) &servaddr, sizeof(struct sockaddr_in)) < 0 ) {
-		CWLog("Error on Binding");
+		CWLog("Error on Binding %s", strerror(errno));
 		return NULL;
 	}
 	

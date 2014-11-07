@@ -710,7 +710,7 @@ void CWHandleTimer(CWTimerArg arg) {
  	int signalToRaise = a->signalToRaise;
 
 	CWThreadSendSignal(requestedThreadPtr, signalToRaise);
- 	CWDebugLog("Timer Expired, Sent Signal(%d) to Thread: %d", signalToRaise, requestedThreadPtr);
+ 	CWDebugLog("Timer Expired, Sent Signal(%d) to Thread: %08x", signalToRaise, requestedThreadPtr);
 
 	CW_FREE_OBJECT(a->requestedThreadPtr);
 	CW_FREE_OBJECT(a);
@@ -730,7 +730,7 @@ CWBool CWTimerRequest(int sec, CWThread *threadPtr, CWTimerID *idPtr, int signal
  	CW_COPY_MEMORY(arg->requestedThreadPtr, threadPtr, sizeof(CWThread));
  	arg->signalToRaise = signalToRaise;
  			
-	CWDebugLog("Timer Request: thread(%d), signal(%d)", *(arg->requestedThreadPtr), arg->signalToRaise);
+	CWDebugLog("Timer Request: thread(%08x), signal(%d)", *(arg->requestedThreadPtr), arg->signalToRaise);
 	
 	if ((*idPtr = timer_add(sec, 0, &CWHandleTimer, arg)) == -1) {
 

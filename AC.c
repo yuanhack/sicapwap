@@ -89,8 +89,8 @@ int main (int argc, const char * argv[]) {
 	if (argc <= 1)
 		printf("Usage: AC working_path\n");
 
-	if (daemon(1, 0) < 0)
-		exit(1);
+//	if (daemon(1, 0) < 0)
+	//	exit(1);
 
 	if (chdir(argv[1]) != 0)
 		exit(1);

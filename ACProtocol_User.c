@@ -160,9 +160,9 @@ CWBool CWACGetACIPv4List(int **listPtr, int *countPtr)
 	
 	CW_CREATE_ARRAY_ERR((*listPtr), (*countPtr), int, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 	
-	inet_pton(AF_INET, "192.168.1.2", &addr); // TO-DO take the addresses from config file?
+	inet_pton(AF_INET, "172.10.10.77", &addr); // TO-DO take the addresses from config file?
 	(*listPtr)[0] = addr.s_addr;
-	inet_pton(AF_INET, "192.168.1.66", &addr);
+	inet_pton(AF_INET, "172.10.10.76", &addr);
 	(*listPtr)[1] = addr.s_addr;
 	
 	return CW_TRUE;

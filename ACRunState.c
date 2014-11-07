@@ -1083,7 +1083,13 @@ CWBool CWAssembleWTPDataTransferResponse (CWProtocolMessage **messagesPtr, int *
 	if(!(CWAssembleMessage(messagesPtr, fragmentsNumPtr, PMTU, seqNum,
 			       CW_MSG_TYPE_VALUE_DATA_TRANSFER_RESPONSE,
 			       msgElems, msgElemCount, msgElemsBinding,
-			       msgElemBindingCount, CW_PACKET_CRYPT))) 
+			       msgElemBindingCount, 
+#ifdef CW_NO_DTLS
+	CW_PACKET_PLAIN
+#else
+	CW_PACKET_CRYPT
+#endif
+		))) 
 
 		return CW_FALSE;
 	
@@ -1116,7 +1122,12 @@ CWBool CWAssembleWTPEventResponse(CWProtocolMessage **messagesPtr,
 			       msgElemCount,
 			       msgElemsBinding,
 			       msgElemBindingCount,
-			       CW_PACKET_CRYPT))) 
+#ifdef CW_NO_DTLS
+	CW_PACKET_PLAIN
+#else
+	CW_PACKET_CRYPT
+#endif
+			))) 
 		return CW_FALSE;
 	
 	CWLog("WTP Event Response Assembled");
@@ -1297,7 +1308,12 @@ CWBool CWAssembleEchoResponse(CWProtocolMessage **messagesPtr, int *fragmentsNum
 			       msgElemCount,
 			       msgElemsBinding,
 			       msgElemBindingCount,
-			       CW_PACKET_CRYPT)))
+#ifdef CW_NO_DTLS
+	CW_PACKET_PLAIN
+#else
+	CW_PACKET_CRYPT
+#endif
+	)))
 		return CW_FALSE;
 	
 	CWLog("Echo Response Assembled");
@@ -1362,7 +1378,12 @@ CWBool CWAssembleConfigurationUpdateRequest(CWProtocolMessage **messagesPtr,
 			       msgElemCount,
 			       msgElemsBinding,
 			       msgElemBindingCount,
-			       CW_PACKET_CRYPT)))
+#ifdef CW_NO_DTLS
+	CW_PACKET_PLAIN
+#else
+	CW_PACKET_CRYPT
+#endif
+	)))
 		return CW_FALSE;
 
 	CWLog("Configuration Update Request Assembled");
@@ -1382,7 +1403,13 @@ CWBool CWAssembleClearConfigurationRequest(CWProtocolMessage **messagesPtr, int 
 	CWLog("Assembling Clear Configuration Request...");
 	
 	
-	if(!(CWAssembleMessage(messagesPtr, fragmentsNumPtr, PMTU, seqNum,CW_MSG_TYPE_VALUE_CLEAR_CONFIGURATION_REQUEST, msgElems, msgElemCount, msgElemsBinding, msgElemBindingCount, CW_PACKET_CRYPT))) 
+	if(!(CWAssembleMessage(messagesPtr, fragmentsNumPtr, PMTU, seqNum,CW_MSG_TYPE_VALUE_CLEAR_CONFIGURATION_REQUEST, msgElems, msgElemCount, msgElemsBinding, msgElemBindingCount, 
+#ifdef CW_NO_DTLS		
+		CW_PACKET_PLAIN
+#else
+		CW_PACKET_CRYPT
+#endif
+		))) 
 		return CW_FALSE;
 
 	CWLog("Clear Configuration Request Assembled");
@@ -1421,7 +1448,13 @@ CWBool CWAssembleStationConfigurationRequest(CWProtocolMessage **messagesPtr, in
 		return CW_FALSE;
 	}
 */
-	if(!(CWAssembleMessage(messagesPtr, fragmentsNumPtr, PMTU, seqNum,CW_MSG_TYPE_VALUE_STATION_CONFIGURATION_REQUEST, msgElems, msgElemCount, msgElemsBinding, msgElemBindingCount, CW_PACKET_CRYPT))) 
+	if(!(CWAssembleMessage(messagesPtr, fragmentsNumPtr, PMTU, seqNum,CW_MSG_TYPE_VALUE_STATION_CONFIGURATION_REQUEST, msgElems, msgElemCount, msgElemsBinding, msgElemBindingCount, 
+#ifdef CW_NO_DTLS
+	CW_PACKET_PLAIN
+#else
+	CW_PACKET_CRYPT
+#endif
+	))) 
 		return CW_FALSE;
 
 	CWLog("Station Configuration Request Assembled");

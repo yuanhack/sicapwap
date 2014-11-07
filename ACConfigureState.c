@@ -68,14 +68,15 @@ CWBool ACEnterConfigure(int WTPIndex, CWProtocolMessage *msgPtr) {
 	if(!(CWSaveConfigureRequestMessage(&configureRequest, &(gWTPs[WTPIndex].WTPProtocolManager)))){
 		return CW_FALSE;
 	}
-		
+
+	// AC配置组包
 	if(!(CWAssembleConfigureResponse(&(gWTPs[WTPIndex].messages), 
 					 &(gWTPs[WTPIndex].messagesCount), 
 					 gWTPs[WTPIndex].pathMTU, 
 					 seqNum)))  { 
 		return CW_FALSE;
 	}
-	
+	// 发送配置
 	if(!CWACSendFragments(WTPIndex)) {
 		return CW_FALSE;
 	}
@@ -227,6 +228,7 @@ CWBool CWParseConfigureRequestMessage(char *msg,
 	return CW_TRUE;
 }
 
+// AC组包配置响应
 CWBool CWAssembleConfigureResponse(CWProtocolMessage **messagesPtr,
 				   int *fragmentsNumPtr,
 				   int PMTU,
@@ -279,7 +281,12 @@ CWBool CWAssembleConfigureResponse(CWProtocolMessage **messagesPtr,
 			       MsgElemCount,
 			       msgElemsBinding,
 			       msgElemBindingCount,
-			       CW_PACKET_CRYPT))) {
+#ifdef CW_NO_DTLS	
+						 CW_PACKET_PLAIN
+#else	    
+			       CW_PACKET_CRYPT
+#endif			       
+			       ))) {
 		return CW_FALSE;
 	}
 	
