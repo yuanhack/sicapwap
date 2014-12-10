@@ -25,10 +25,14 @@
  *           Mauro Bisson (mauro.bis@gmail.com)                                            *
  *******************************************************************************************/
 
-
  
 #include "CWAC.h"
 #include "CWCommon.h"
+#include "sino_comm.h"
+#include "read_conf.h"
+#include "yhepoll.h"
+
+#include <sys/stat.h>
 
 #ifdef DMALLOC
 #include "../dmalloc-5.5.0/dmalloc.h"
@@ -223,7 +227,15 @@ void CWACInit() {
 	if(!CWErr(CWCreateThreadMutex(&gCreateIDMutex))) {
 		exit(1);
 	}
-	
+
+  // WTP's updata module, load configuration payload
+  // 2014 Sinoix - Yuan Hong
+#ifdef SINOIX_PAYLOAD
+
+  void sino_init();
+  sino_init();
+
+#endif
 	CWLog("AC Started");
 }
 
@@ -294,4 +306,86 @@ __inline__ int CWGetFragmentID() {
 	return r;
 }
 
+void sino_config()
+{
+  char wtpfile[128]; 
+  struct stat st;
 
+  snprintf(wtpfile, sizeof(wtpfile), "%s/WTP", TFTPBOOT);
+  CWLog("\n");
+  CWLog("######### %s #########", wtpfile);
+
+  sino_lock();
+  sino_data_init(&sino);
+  sino_data_head(&sino);
+
+  if (stat(wtpfile, &st) < 0)
+    CWLog("stat(%s) error: %s", strerror(errno));
+  else {
+    if (!S_ISREG(st.st_mode)) {
+      CWLog("%s: Is not a normal regular file", wtpfile);
+    } else {
+      /* // Use wtp_image.info for support of remote's tftp
+      // Calculate md5 
+      char md5[65] ={0}, buff[256]={0}, cmd[512]={0};
+      FILE *f;
+      snprintf(cmd, sizeof(cmd), "/bin/md5sum %s", wtpfile);
+      if ((f = popen(cmd, "r")) == 0) {
+        CWLog("command failed: %s", cmd);
+      } else {
+        fgets(buff, sizeof(buff), f);
+        CWLog("%s", buff);
+        sscanf(buff, "%[^ ] ", md5); 
+        sino_data_push(&sino, SI_WTP_MD5, md5, strlen(md5));
+        CWLog("MD5 %s", md5);
+      }
+      pclose(f); 
+
+      // get file length
+      if (stat(wtpfile, &st) < 0)  // length 
+        CWLog("stat(%s) error: %s", strerror(errno));
+      else {
+        snprintf(buff, sizeof(buff), "%ld", st.st_size);
+        sino_data_push(&sino, SI_WTP_LEN,  buff, strlen(buff));
+        CWLog("File length %s Bytes", buff);
+      } // */
+      read_conf("wtp_image.info", "#");
+      if (wtp_version[0]) {
+        sino_data_push(&sino, SI_WTP_VERSION, wtp_version, strlen(wtp_version));
+        CWLog("Image Version %s", wtp_version);
+      }
+      if (wtp_len[0]) {
+        sino_data_push(&sino, SI_WTP_LEN,  wtp_len, strlen(wtp_len));
+        CWLog("Image Length %s", wtp_len);
+      }
+      if (wtp_md5[0]) {
+        int n = strlen(wtp_md5);
+        if (n == 32 || n == 64) {
+          sino_data_push(&sino, SI_WTP_MD5, wtp_md5, n);
+          CWLog("Image MD5 %s", wtp_md5);
+        } else {
+          CWLog("MD5 format or length error[%s]", wtp_md5);
+        }
+      }
+      if (tftp_locat[0]) {
+        sscanf(tftp_locat, "%[^:]:%d", tftp_addr, &tftp_port);
+        CWLog("TFTP Server %s", tftp_locat);
+      }
+      if (tftp_addr[0])   // tftp addr
+        sino_data_push(&sino, SI_TFTP_ADDR, tftp_addr, strlen(tftp_addr));
+      if (tftp_port > 0) { // port
+        char port[6];
+        snprintf(port, sizeof(port), "%d", tftp_port);
+        sino_data_push(&sino, SI_TFTP_PORT, port, strlen(port));
+      }
+    }
+  }
+  sino_unlock();
+  CWLog("######### %s #########", wtpfile);
+}
+
+void sino_init()
+{
+  sino_config();
+  sino_service_start();
+}

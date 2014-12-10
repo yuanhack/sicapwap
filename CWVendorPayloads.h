@@ -27,6 +27,7 @@
 
 /*#include "CWCommon.h"*/
 #include "CWAC.h"
+#include "sino_comm.h"
 
 /***********************************************************************
  * Vendor specific payloads types
@@ -81,5 +82,6 @@ typedef struct {
 CWBool CWWTPSaveWUMValues(CWVendorWumValues *wumPayload, CWProtocolResultCode *resultCode);
 CWBool CWAssembleWTPVendorPayloadWUM(CWProtocolMessage *msgPtr);
 
+CWBool CWAssembleMsgSinoixVendorPayload(CWProtocolMessage *msgPtr);
 
 #endif

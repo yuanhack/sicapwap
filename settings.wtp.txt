@@ -3,5 +3,5 @@
 
 #
 #<IF_NAME>    wlan2
-<IF_NAME>    wlp2s0
+<IF_NAME>    p7p1
 

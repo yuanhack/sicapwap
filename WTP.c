@@ -32,6 +32,7 @@
 #include "../dmalloc-5.5.0/dmalloc.h"
 #endif
 
+
 CW_THREAD_RETURN_TYPE CWWTPReceiveFrame(void *arg);
 CW_THREAD_RETURN_TYPE CWWTPReceiveStats(void *arg);
 CW_THREAD_RETURN_TYPE CWWTPReceiveFreqStats(void *arg);
@@ -313,6 +314,31 @@ cw_failure:
 	return CW_FALSE;
 }
 
+#define FILE_VERSION "version"
+
+extern int gv1,gv2,gv3; //version x.x.x
+
+int read_version(const char *path) {
+  FILE *fp = fopen(path, "r");
+  char line[1024];
+  gv1 = gv2 = gv3 = 0;
+  if (fp == 0) {
+    CWLog("fopen(%s) error: %s", path, strerror(errno));
+    return -1;
+  }
+  if (fgets(line, sizeof(line), fp)) {
+    sscanf(line, "%d.%d.%d", &gv1, &gv2, &gv3);
+    CWDebugLog("version info: %d.%d.%d", gv1, gv2, gv3);
+  } else {
+    fclose(fp);
+    return -1;
+  }
+  fclose(fp);
+
+  return 0;
+}
+
+
 int main (int argc, const char * argv[]) {
 	
 	
@@ -322,22 +348,31 @@ int main (int argc, const char * argv[]) {
 	
 	if (argc <= 1)
 		printf("Usage: WTP working_path\n");
-
+#if 0
 	if ((pid = fork()) < 0)
-		exit(1);
+	exit(1);
 	else if (pid != 0)
-		exit(0);
+	exit(0);
 	else {
 		setsid();
 		fclose(stdout);
 		if (chdir(argv[1]) != 0)
-			exit(1);
-	}	
+		exit(1);
+	}
+#endif
 	
 	
 	CWStateTransition nextState = CW_ENTER_DISCOVERY;
 
 	CWLogInitFile(WTP_LOG_FILE_NAME);
+
+  int old_value = gEnabledLog;
+  gEnabledLog = 1;
+  if (read_version(FILE_VERSION) < 0) // for version info
+    CWLog("read version info failed");
+  gEnabledLog = old_value;
+  signal(SIGCHLD, SIG_IGN);
+
 
 #ifndef CW_SINGLE_THREAD
 	CWDebugLog("Use Threads");
@@ -350,6 +385,7 @@ int main (int argc, const char * argv[]) {
 		CWLog("Can't start WTP");
 		exit(1);
 	}
+
 
 	/* Capwap receive packets list */
 	if (!CWErr(CWCreateSafeList(&gPacketReceiveList)))
@@ -503,11 +539,20 @@ CWBool CWWTPLoadConfiguration() {
 			    CWACDescriptor,
 			    return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 
+    // Yuan Hong 状态上报到AC时要使用
+    extern char **aclist;  // WTPProtocol.c file 
+    extern int account; 
+    CW_CREATE_ARRAY_ERR(aclist, gCWACCount, char *, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);); //
+    account = gCWACCount;
+
 	for(i = 0; i < gCWACCount; i++) {
 
 		CWDebugLog("Init Configuration for AC at %s", gCWACAddresses[i]);
 		CW_CREATE_STRING_FROM_STRING_ERR(gCWACList[i].address, gCWACAddresses[i],
 						 return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
+
+		CW_CREATE_STRING_FROM_STRING_ERR(aclist[i], gCWACAddresses[i], // Yuan Hong
+						 return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);); //
 	}
 	
 	CW_FREE_OBJECTS_ARRAY(gCWACAddresses, gCWACCount);

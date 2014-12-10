@@ -151,7 +151,6 @@ void CWACManageIncomingPacket(CWSocket sock,
 
 		CWLockSafeList(wtpPtr->packetReceiveList);
 		CWAddElementToSafeListTail(wtpPtr->packetReceiveList, pData, readBytes);
-		CWLog(" * CWACManageIncomingPacket -> CWManageWTP packetReceiveList"); // Yuan Hong
 		CWUnlockSafeList(wtpPtr->packetReceiveList);		
 	} else { 
 		/* unknown WTP */
@@ -434,7 +433,6 @@ CW_THREAD_RETURN_TYPE CWManageWTP(void *arg) {
 		       (CWGetCountElementFromSafeList(gWTPs[i].packetReceiveList) == 0) &&
 		       (gWTPs[i].interfaceCommand == NO_CMD)) {
 
-            CWLog(" * CWManageWTP while wait Data or CMD"); // Yuan Hong
             /*TODO: Check system */
 			CWWaitThreadCondition(&gWTPs[i].interfaceWait, 
 					      &gWTPs[i].interfaceMutex);

@@ -26,6 +26,8 @@
  *******************************************************************************************/
 
 #include "CWAC.h"
+#include "sino_comm.h"
+#include "CWVendorPayloads.h"
 
 #ifdef DMALLOC
 #include "../dmalloc-5.5.0/dmalloc.h"
@@ -235,7 +237,11 @@ CWBool CWAssembleConfigureResponse(CWProtocolMessage **messagesPtr,
 				   int seqNum) {
 
 	CWProtocolMessage *msgElems = NULL;
-	const int MsgElemCount=6;
+#ifdef SINOIX_PAYLOAD
+	const int MsgElemCount = 7;
+#else
+	const int MsgElemCount = 6;
+#endif
 	CWProtocolMessage *msgElemsBinding = NULL;
 	int msgElemBindingCount=0;
 	int k = -1;
@@ -245,7 +251,7 @@ CWBool CWAssembleConfigureResponse(CWProtocolMessage **messagesPtr,
 	
 	CWDebugLog("Assembling Configure Response...");
 	CW_CREATE_PROTOCOL_MSG_ARRAY_ERR(msgElems, MsgElemCount, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
-	
+
 	/* Assemble Message Elements */
 	if ((!(CWAssembleMsgElemACIPv4List(&(msgElems[++k])))) ||
 	    (!(CWAssembleMsgElemACIPv6List(&(msgElems[++k])))) ||
@@ -253,7 +259,10 @@ CWBool CWAssembleConfigureResponse(CWProtocolMessage **messagesPtr,
 	    /*(!(CWAssembleMsgElemRadioOperationalState(-1, &(msgElems[++k])))) ||*/
 	    (!(CWAssembleMsgElemDecryptErrorReportPeriod(&(msgElems[++k])))) ||
 	    (!(CWAssembleMsgElemIdleTimeout(&(msgElems[++k])))) ||
-	    (!(CWAssembleMsgElemWTPFallback(&(msgElems[++k]))))
+	    (!(CWAssembleMsgElemWTPFallback(&(msgElems[++k])))) 
+#ifdef SINOIX_PAYLOAD
+		||(!(CWAssembleMsgSinoixVendorPayload(&(msgElems[++k]))))
+#endif
 	){
 		int i;
 		for(i = 0; i <= k; i++) { CW_FREE_PROTOCOL_MESSAGE(msgElems[i]);}

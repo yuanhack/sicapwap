@@ -482,7 +482,7 @@ CWBool CWAssembleMessage(CWProtocolMessage **completeMsgPtr, int *fragmentsNumPt
 				transportVal.last = 1;
 			}
 
-			CWDebugLog("Fragment #:%d, offset:%d, bytes stored:%d/%d", i, transportVal.fragmentOffset, fragSize, totalSize);//
+			//CWDebugLog("Fragment #:%d, offset:%d, bytes stored:%d/%d", i, transportVal.fragmentOffset, fragSize, totalSize);
 			
 			// Assemble Transport Header for this fragment
 			if(!(CWAssembleTransportHeader(&transportHdr, &transportVal))) {
@@ -700,27 +700,27 @@ CWBool CWParseTransportHeader(CWProtocolMessage *msgPtr, CWProtocolTransportHead
 	CWDebugLog("WBID: %d", CWGetField32(val, CW_TRANSPORT_HEADER_WBID_START, CW_TRANSPORT_HEADER_WBID_LEN));
 	
 	valuesPtr->type = CWGetField32(val, CW_TRANSPORT_HEADER_T_START, CW_TRANSPORT_HEADER_T_LEN);
-	CWDebugLog("TYPE: %d", valuesPtr->type); //
+	//CWDebugLog("TYPE: %d", valuesPtr->type);
 	
 	valuesPtr->isFragment = CWGetField32(val, CW_TRANSPORT_HEADER_F_START, CW_TRANSPORT_HEADER_F_LEN);
-	CWDebugLog("IS FRAGMENT: %d", valuesPtr->isFragment); //
+	//CWDebugLog("IS FRAGMENT: %d", valuesPtr->isFragment);
 
 	valuesPtr->last = CWGetField32(val, CW_TRANSPORT_HEADER_L_START, CW_TRANSPORT_HEADER_L_LEN);
-	CWDebugLog("NOT LAST: %d", valuesPtr->last);//
+	//CWDebugLog("NOT LAST: %d", valuesPtr->last);
 	
 	optionalWireless = CWGetField32(val, CW_TRANSPORT_HEADER_W_START, CW_TRANSPORT_HEADER_W_LEN);
-	CWDebugLog("OPTIONAL WIRELESS: %d", optionalWireless);//
+//	CWDebugLog("OPTIONAL WIRELESS: %d", optionalWireless);
 	
 	valuesPtr->keepAlive = CWGetField32(val, CW_TRANSPORT_HEADER_K_START, CW_TRANSPORT_HEADER_K_LEN);
-	CWDebugLog("KEEP ALIVE: %d", valuesPtr->keepAlive);//
+//	CWDebugLog("KEEP ALIVE: %d", valuesPtr->keepAlive);
 
 	val = CWProtocolRetrieve32(msgPtr);
 
 	valuesPtr->fragmentID = CWGetField32(val, CW_TRANSPORT_HEADER_FRAGMENT_ID_START, CW_TRANSPORT_HEADER_FRAGMENT_ID_LEN);
-	CWDebugLog("FRAGMENT_ID: %d", valuesPtr->fragmentID);//
+//	CWDebugLog("FRAGMENT_ID: %d", valuesPtr->fragmentID);
 
 	valuesPtr->fragmentOffset = CWGetField32(val, CW_TRANSPORT_HEADER_FRAGMENT_OFFSET_START, CW_TRANSPORT_HEADER_FRAGMENT_OFFSET_LEN);
-	CWDebugLog("FRAGMENT_OFFSET: %d", valuesPtr->fragmentOffset);//
+//	CWDebugLog("FRAGMENT_OFFSET: %d", valuesPtr->fragmentOffset);
 
 	valuesPtr->bindingValuesPtr = NULL;
 	if(transport4BytesLen == 4 && optionalWireless == 1){
@@ -748,13 +748,13 @@ CWBool CWParseControlHeader(CWProtocolMessage *msgPtr, CWControlHeaderValues *va
 	CWDebugLog("MESSAGE_TYPE: %u",	valPtr->messageTypeValue);
 	
 	valPtr->seqNum = CWProtocolRetrieve8(msgPtr);
-	CWDebugLog("SEQUENCE_NUMBER: %u", valPtr->seqNum );//
+//	CWDebugLog("SEQUENCE_NUMBER: %u", valPtr->seqNum );
 
 	valPtr->msgElemsLen = CWProtocolRetrieve16(msgPtr);
-	CWDebugLog("MESSAGE_ELEMENT_LENGTH: %u", valPtr->msgElemsLen );//
+//	CWDebugLog("MESSAGE_ELEMENT_LENGTH: %u", valPtr->msgElemsLen );
 	
 	flags=CWProtocolRetrieve8(msgPtr);
-	CWDebugLog("FLAGS: %u",	flags);//
+//	CWDebugLog("FLAGS: %u",	flags);
 	
 //	valPtr->timestamp = CWProtocolRetrieve32(msgPtr);
 //	CWDebugLog("TIME_STAMP: %u",	valPtr->timestamp);

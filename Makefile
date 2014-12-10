@@ -29,11 +29,12 @@
 
 CC = gcc 
 
-LDFLAGS = -lssl -lcrypto -lpthread -ldl -D_REENTRANT
+LDFLAGS = -lssl -lcrypto -lpthread -ldl -D_REENTRANT -lsqlite3
 #LDFLAGS = /usr/lib/libefence.a ./static/libssl.a ./static/libcrypto.a -lpthread -ldl -D_REENTRANT
 #LDFLAGS = ./static/libssl.a ./static/libcrypto.a -lpthread -ldl -D_REENTRANT
 
 CFLAGS = -Wall -g -O0 -D_REENTRANT -DCW_NO_DTLS -DCW_NO_DTLSCWParseConfigurationUpdateRequest
+CFLAGS += -DSINOIX_PAYLOAD
 
 #OPENSSL_INCLUDE = #-I/usr/local/ssl/include/ #Openssl include files
 OPENSSL_INCLUDE = -I ./include/openssl #Openssl include files
@@ -49,10 +50,10 @@ CFLAGS += -DOPENSSL_NO_KRB5
 RM = /bin/rm -f 
 
 # list of generated object files for AC. 
-AC_OBJS = AC.o ACConfigFile.o ACMainLoop.o ACDiscoveryState.o ACJoinState.o ACConfigureState.o ACDataCheckState.o ACRunState.o ACProtocol_User.o ACRetransmission.o CWCommon.o CWConfigFile.o CWErrorHandling.o CWList.o CWLog.o ACMultiHomedSocket.o  ACProtocol.o CWSafeList.o CWNetwork.o CWProtocol.o CWRandom.o CWSecurity.o CWOpenSSLBio.o CWStevens.o CWThread.o CWBinding.o CWVendorPayloadsAC.o ACBinding.o ACInterface.o ACSettingsFile.o timerlib.o  
+AC_OBJS = AC.o ACConfigFile.o ACMainLoop.o ACDiscoveryState.o ACJoinState.o ACConfigureState.o ACDataCheckState.o ACRunState.o ACProtocol_User.o ACRetransmission.o CWCommon.o CWConfigFile.o CWErrorHandling.o CWList.o CWLog.o ACMultiHomedSocket.o  ACProtocol.o CWSafeList.o CWNetwork.o CWProtocol.o CWRandom.o CWSecurity.o CWOpenSSLBio.o CWStevens.o CWThread.o CWBinding.o CWVendorPayloadsAC.o ACBinding.o ACInterface.o ACSettingsFile.o timerlib.o  sino_comm.o read_conf.o yhepoll.o sino_service.o yhpath.o
 
 # list of generated object files for WTP. 
-WTP_OBJS = WTP.o WTPFrameReceive.o WTPFreqStatsReceive.o WTPStatsReceive.o WTPConfigFile.o WTPProtocol.o WTPProtocol_User.o WTPDiscoveryState.o WTPJoinState.o WTPConfigureState.o WTPDataCheckState.o WTPRunState.o WTPRunStateCheck.o WTPRetransmission.o WTPSulkingState.o CWCommon.o CWConfigFile.o CWErrorHandling.o CWSafeList.o CWList.o CWLog.o CWNetwork.o CWProtocol.o CWRandom.o CWSecurity.o CWOpenSSLBio.o CWStevens.o CWThread.o CWBinding.o CWVendorPayloadsWTP.o WTPBinding.o WTPDriverInteraction.o WTPSettingsFile.o timerlib.o 
+WTP_OBJS = WTP.o WTPFrameReceive.o WTPFreqStatsReceive.o WTPStatsReceive.o WTPConfigFile.o WTPProtocol.o WTPProtocol_User.o WTPDiscoveryState.o WTPJoinState.o WTPConfigureState.o WTPDataCheckState.o WTPRunState.o WTPRunStateCheck.o WTPRetransmission.o WTPSulkingState.o CWCommon.o CWConfigFile.o CWErrorHandling.o CWSafeList.o CWList.o CWLog.o CWNetwork.o CWProtocol.o CWRandom.o CWSecurity.o CWOpenSSLBio.o CWStevens.o CWThread.o CWBinding.o CWVendorPayloadsWTP.o WTPBinding.o WTPDriverInteraction.o WTPSettingsFile.o timerlib.o sino_comm.o getifaddr.o getifmac.o domain_parse.o
 
 WUA_OBJS = WUA.o
  
