@@ -1,6 +1,6 @@
 #include "getifmac.h"
 
-int get_mac(const char *itf_name, char *macbuf, int len, char *errinfo, int errlen)
+int getifmac(const char *itf_name, char *macbuf, int len, char *errinfo, int errlen)
 {
     struct ifreq ifreq;
     int sock;

@@ -9,16 +9,16 @@
 #include "read_conf.h"
 #include "CWLog.h"
 
-#define WTP_VERSION   "wtp_version=" 
-#define WTP_MD5       "wtp_md5="
-#define WTP_LEN       "wtp_len="
-//#define WTP_SHA1      "wtp_SHA1="
+#define WTP_VERSION   "firmware_version=" 
+#define WTP_MD5       "firmware_md5="
+#define WTP_LEN       "firmware_len="
+//#define WTP_SHA1      "firmware_SHA1="
 #define TFTP_LOCAT    "tftp_location="
 
 extern char tftp_locat[1024];
-extern char wtp_version[65];
-extern char wtp_md5[65];    // 128bit -> 32, 256bit->64
-extern char wtp_len[10];    // 4294967296 4096M 4G
+extern char firmware_version[65];
+extern char firmware_md5[65];    // 128bit -> 32, 256bit->64
+extern char firmware_len[10];    // 4294967296 4096M 4G
 extern char tftp_addr[1000]; 
 extern int  tftp_port = 0;
 
@@ -203,24 +203,31 @@ int stritem_usable(const char *linehead, const char *item, const char *sym)
 }
 
 
-void read_conf(const char *conf, const char *comm_sym)
+int read_conf(const char *conf, const char *comm_sym)
 {
     int len;
     int fd;
     char _buff[1024*6] = {0};
 
-    if ( (fd = open(conf, O_RDONLY)) < 0 ) 
-        CWLog("%s error: %s", conf, strerror(errno));
+    if ( (fd = open(conf, O_RDONLY)) < 0 ) {
+        CWLog("open error: %s %s", conf, strerror(errno));
+        return -1;
+    }
     len = read(fd, _buff, sizeof(_buff)-1);
-    if ( len == sizeof(_buff) ) 
+    if ( len == sizeof(_buff) ) {
         CWLog("%s error: The file content anomalies");
+        close(fd);
+        return -1;
+    }
+
     close(fd);
 
     set_line_comment_symbol(comm_sym);
 
     set_item_s(_buff, TFTP_LOCAT,  tftp_locat);
-    set_item_s(_buff, WTP_VERSION, wtp_version);
-    set_item_s(_buff, WTP_MD5, wtp_md5);
-    set_item_s(_buff, WTP_LEN, wtp_len);
+    set_item_s(_buff, WTP_VERSION, firmware_version);
+    set_item_s(_buff, WTP_MD5, firmware_md5);
+    set_item_s(_buff, WTP_LEN, firmware_len);
+    return 0;
 }
 

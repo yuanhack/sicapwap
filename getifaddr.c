@@ -58,7 +58,7 @@ int getifaddr(const char *itf_name, int type, char *ip, int len,
         }
     }
     if (ifa == NULL) {
-        snprintf(errinfo ,errlen, "getifaddr() failed: No such interface: %s", itf_name);
+        snprintf(errinfo ,errlen, "getifaddr() failed: %s: No such interface or no address", itf_name);
         goto err_free_out;
     }
 

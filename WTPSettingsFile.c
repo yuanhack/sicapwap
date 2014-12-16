@@ -83,7 +83,7 @@ CWBool CWParseSettingsFile()
 			CW_CREATE_STRING_ERR(gInterfaceName, offset, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY,NULL););
 			strncpy(gInterfaceName, startValue, offset);
 			gInterfaceName[offset] ='\0';
-			CWLog(": %s", gInterfaceName);
+			CWLog("IF_NAME: %s", gInterfaceName);
 			CW_FREE_OBJECT(line);
 			continue;	
 		}

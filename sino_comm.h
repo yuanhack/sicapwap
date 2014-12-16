@@ -6,35 +6,34 @@
 
 typedef unsigned char uchar;
 
-/* WTP's updata module */
-#define TFTPBOOT "/tftpboot"
+// Updata process config 
+#define TFTPBOOT        "/tftpboot"
+#define REPORT_IF_NAME  "report-if.name"  //
 
-/*
-   Vendor Specific Payload format
+// 固件下载保存路径
+#define FIRMWARE_IMAGE_PATH "/tmp/firmware_image"
+// 固件下载成功后信息保存文件
+#define FIRMWARE_IMAGE_INFO "/tmp/firmware_image.info"
+
+// 记录固件当前版本的文件，由固件制作时指定
+#define FIRMWARE_VERSION    "/etc/firmware_version"
+
+/* Vendor Specific Payload format
    ---------------------------------------------------
-   HEAD fields
-   head field 1: Magic head 0x789A (uint16_t)
-   head field 2: Element number (uint16_t)
-   head field 3: Datas length (uint16_t)
-   ---------------------------------------------------
-   Data fields (struct sino_comm)
-   element 1 	: sino_elem 1
-   element 2 	: sino_elem 2
-   .	: sino_elem .
-   element n 	: sino_elem n
-   ----------------------------------------------------
- */
+   sino_head + sino_elem(n)
+   --------------------------------------------------- */
 
 enum element_types {
-    //SINO_SUCCESS  = 0,
-    //SINO_ERROR    = 1,
+    SI_SUCCESS  = 0,
+    SI_ERROR    = 1,
     SI_SSID = 2,
     SI_CHANNEL,
     SI_PASSWD,
-    SI_WTP_VERSION, 
-    //SI_WTP_SHA1,    // 
-    SI_WTP_MD5,     // 
-    SI_WTP_LEN,    // file size 
+
+    // firmware image info
+    SI_FI_VERSION, 
+    SI_FI_MD5,     
+    SI_FI_LEN,    // file size 
     SI_TFTP_ADDR,   // ip or domain
     SI_TFTP_PORT,   // default udp port 69
 };
@@ -45,18 +44,19 @@ enum element_types {
 #define SINOIX_MAX_SIZE 2048
 
 #define SI_MAGIC 0x89abcdef
+// network transmission use
 typedef struct {
     uint32_t  magic; // SI_MAGIC, Vendor Identifier
-    uint16_t  elems;
-    uint16_t  len;
+    uint16_t  elems; // elem's number
+    uint16_t  len;   // elem's length
 } sino_head;
-
 typedef struct {
     uint16_t  type; 
     uint16_t  len;
     uchar     info[];   // uint_least8_t
 } sino_elem;
 
+// local process use
 typedef struct {
     uint16_t  offset; // Local byte order, local use only
     uint16_t  pos;
@@ -73,17 +73,18 @@ enum {
 enum {
     UPSTAT_SUC,         // 下载完成
     UPSTAT_ING,         // 开始或者下载中
-    UPSTAT_ERR_TFTP,    // tftp下载错误
+    UPSTAT_ERR_TFTP,    // tftp下载时错误
     UPSTAT_ERR_MD5,     // md5校验错误,可能md5码错误或文件下载不完整
-    //UPSTAT_ERR_LEN,     // 下载后文件长度不对
+    UPSTAT_ERR_SAVEINFO,// 正确下载固件和校验成功,但保存信息文件时出错,例如写文件错误
 };
 #define SS_MAGIC 0xffffaaaa
 typedef struct {
     uint32_t  magic;   // SS_MAGIC
     uint16_t  stat;    // status code
     char      ver[32]; // version number
+    char      ifname[16];
     char      mac[18]; // ff:ff:ff:ff:ff:ff len 6*2(ff) + 5(:)  + 1(null)
-    char      ip[INET6_ADDRSTRLEN*2];  // INET6_ADDRSTRLEN 46
+    char      ip[INET6_ADDRSTRLEN];  // INET6_ADDRSTRLEN 46
 } packet_stat;
 #pragma pack(pop)
 
@@ -106,7 +107,7 @@ int sino_unlock();
 
 void sino_service_start();
 
-void pack_net_stat(packet_stat *pack, int stat, char *ver, char *mac, char *ip);
+void pack_net_stat(packet_stat *pack, int stat, char *ver, char *mac, char *ip, char *ifname);
 void pack_net_to_local(packet_stat *net_pack, packet_stat *local_pack);
 
 #endif /* __SINOIX_INFO_H_YH__ */

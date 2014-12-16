@@ -126,21 +126,23 @@ int sino_packet_size(sino_head* head)
     return sizeof(sino_head) + sino_elem_size(head);
 }
 
-void pack_net_stat(packet_stat *pack, int stat, char *ver, char *mac, char *ip)
+void pack_net_stat(packet_stat *pack, int stat, char *ver, char *mac, char *ip, char *ifname)
 {
     pack->magic = htonl(SS_MAGIC);
     pack->stat  = htons(stat);
-    snprintf(pack->ver, sizeof(pack->ver), "%s", ver);
-    snprintf(pack->mac, sizeof(pack->mac), "%s", mac);
-    snprintf(pack->ip,  sizeof(pack->ip),  "%s", ip);
+    snprintf(pack->ver,     sizeof(pack->ver), "%s", ver);
+    snprintf(pack->mac,     sizeof(pack->mac), "%s", mac);
+    snprintf(pack->ip,      sizeof(pack->ip),  "%s", ip);
+    snprintf(pack->ifname,  sizeof(pack->ifname),  "%s", ifname);
 }
 void pack_net_to_local(packet_stat *net_pack, packet_stat *local_pack)
 {
     local_pack->magic = ntohl(net_pack->magic);
     local_pack->stat  = ntohs(net_pack->stat);
-    snprintf(local_pack->ver, sizeof(local_pack->ver), "%s", net_pack->ver);
-    snprintf(local_pack->mac, sizeof(local_pack->mac), "%s", net_pack->mac);
-    snprintf(local_pack->ip,  sizeof(local_pack->ip),  "%s", net_pack->ip);
+    snprintf(local_pack->ver,   sizeof(local_pack->ver), "%s", net_pack->ver);
+    snprintf(local_pack->mac,   sizeof(local_pack->mac), "%s", net_pack->mac);
+    snprintf(local_pack->ip,    sizeof(local_pack->ip),  "%s", net_pack->ip);
+    snprintf(local_pack->ifname,sizeof(local_pack->ifname),  "%s", net_pack->ifname);
 }
 
 

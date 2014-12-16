@@ -93,8 +93,10 @@ int main (int argc, const char * argv[]) {
 	if (argc <= 1)
 		printf("Usage: AC working_path\n");
 
-//	if (daemon(1, 0) < 0)
-	//	exit(1);
+#if 1
+	if (daemon(1, 0) < 0)
+		exit(1);
+#endif
 
 	if (chdir(argv[1]) != 0)
 		exit(1);
@@ -308,84 +310,71 @@ __inline__ int CWGetFragmentID() {
 
 void sino_config()
 {
-  char wtpfile[128]; 
-  struct stat st;
+    char imagepath[128]; 
+    const char * p, *pinfo;
+    struct stat st;
+    p = strrchr(FIRMWARE_IMAGE_PATH, '/');
+    ++p;
+    pinfo = strrchr(FIRMWARE_IMAGE_INFO, '/');
+    ++pinfo;
 
-  snprintf(wtpfile, sizeof(wtpfile), "%s/WTP", TFTPBOOT);
-  CWLog("\n");
-  CWLog("######### %s #########", wtpfile);
+    snprintf(imagepath, sizeof(imagepath), "%s/%s", TFTPBOOT, p);
+    CWLog("\n");
+    CWLog("######### %s #########", imagepath);
 
-  sino_lock();
-  sino_data_init(&sino);
-  sino_data_head(&sino);
+    sino_lock();
+    sino_data_init(&sino);
+    sino_data_head(&sino);
 
-  if (stat(wtpfile, &st) < 0)
-    CWLog("stat(%s) error: %s", strerror(errno));
-  else {
-    if (!S_ISREG(st.st_mode)) {
-      CWLog("%s: Is not a normal regular file", wtpfile);
+    if (stat(imagepath, &st) < 0) {
+        CWLog("stat(%s) error: %s", imagepath, strerror(errno));
     } else {
-      /* // Use wtp_image.info for support of remote's tftp
-      // Calculate md5 
-      char md5[65] ={0}, buff[256]={0}, cmd[512]={0};
-      FILE *f;
-      snprintf(cmd, sizeof(cmd), "/bin/md5sum %s", wtpfile);
-      if ((f = popen(cmd, "r")) == 0) {
-        CWLog("command failed: %s", cmd);
-      } else {
-        fgets(buff, sizeof(buff), f);
-        CWLog("%s", buff);
-        sscanf(buff, "%[^ ] ", md5); 
-        sino_data_push(&sino, SI_WTP_MD5, md5, strlen(md5));
-        CWLog("MD5 %s", md5);
-      }
-      pclose(f); 
-
-      // get file length
-      if (stat(wtpfile, &st) < 0)  // length 
-        CWLog("stat(%s) error: %s", strerror(errno));
-      else {
-        snprintf(buff, sizeof(buff), "%ld", st.st_size);
-        sino_data_push(&sino, SI_WTP_LEN,  buff, strlen(buff));
-        CWLog("File length %s Bytes", buff);
-      } // */
-      read_conf("wtp_image.info", "#");
-      if (wtp_version[0]) {
-        sino_data_push(&sino, SI_WTP_VERSION, wtp_version, strlen(wtp_version));
-        CWLog("Image Version %s", wtp_version);
-      }
-      if (wtp_len[0]) {
-        sino_data_push(&sino, SI_WTP_LEN,  wtp_len, strlen(wtp_len));
-        CWLog("Image Length %s", wtp_len);
-      }
-      if (wtp_md5[0]) {
-        int n = strlen(wtp_md5);
-        if (n == 32 || n == 64) {
-          sino_data_push(&sino, SI_WTP_MD5, wtp_md5, n);
-          CWLog("Image MD5 %s", wtp_md5);
+        if (!S_ISREG(st.st_mode)) { // File no exists
+            CWLog("%s: Is not a normal regular file", imagepath);
+            return;
         } else {
-          CWLog("MD5 format or length error[%s]", wtp_md5);
-        }
-      }
-      if (tftp_locat[0]) {
-        sscanf(tftp_locat, "%[^:]:%d", tftp_addr, &tftp_port);
-        CWLog("TFTP Server %s", tftp_locat);
-      }
-      if (tftp_addr[0])   // tftp addr
-        sino_data_push(&sino, SI_TFTP_ADDR, tftp_addr, strlen(tftp_addr));
-      if (tftp_port > 0) { // port
-        char port[6];
-        snprintf(port, sizeof(port), "%d", tftp_port);
-        sino_data_push(&sino, SI_TFTP_PORT, port, strlen(port));
-      }
-    }
-  }
-  sino_unlock();
-  CWLog("######### %s #########", wtpfile);
+            do {
+                if (read_conf(pinfo, "#") < 0) break;
+                if (firmware_version[0]) {
+                    sino_data_push(&sino, SI_FI_VERSION, firmware_version, strlen(firmware_version));
+                    CWLog("Firmware Version %s", firmware_version);
+                }
+                if (firmware_len[0]) {
+                    sino_data_push(&sino, SI_FI_LEN,  firmware_len, strlen(firmware_len));
+                    CWLog("Firmware Length %s", firmware_len);
+                }
+                if (firmware_md5[0]) {
+                    int n = strlen(firmware_md5);
+                    if (n == 32 || n == 64) {
+                        sino_data_push(&sino, SI_FI_MD5, firmware_md5, n);
+                        CWLog("Firmware MD5 %s", firmware_md5);
+                    } else {
+                        CWLog("MD5 format or length error[%s]", firmware_md5);
+                    }
+                }
+                if (tftp_locat[0]) {
+                    sscanf(tftp_locat, "%[^:]:%d", tftp_addr, &tftp_port);
+                    CWLog("TFTP Server %s", tftp_locat);
+                }
+                if (tftp_addr[0])   // tftp addr
+                    sino_data_push(&sino, SI_TFTP_ADDR, tftp_addr, strlen(tftp_addr));
+                if (tftp_port > 0) { // port
+                    char port[6];
+                    snprintf(port, sizeof(port), "%d", tftp_port);
+                    sino_data_push(&sino, SI_TFTP_PORT, port, strlen(port));
+                }
+            } while (0);
+        } 
+    } // if (stat(imagepath, &st) < 0) else
+    sino_unlock();
+    CWLog("######### %s #########", imagepath);
 }
 
 void sino_init()
 {
   sino_config();
+  if (firmware_version[0] == 0)
+      CWLog("Without the firmware file");
+
   sino_service_start();
 }

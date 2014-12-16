@@ -26,6 +26,10 @@
  *	         Antonio Davoli (antonio.davoli@gmail.com)											*
  ************************************************************************************************/
 
+#include "sino_comm.h"
+#include "getifmac.h"
+#include "getifaddr.h"
+
 #include "CWWTP.h"
 
 #ifdef DMALLOC
@@ -314,33 +318,100 @@ cw_failure:
 	return CW_FALSE;
 }
 
-#define FILE_VERSION "version"
 
-extern int gv1,gv2,gv3; //version x.x.x
+int  gv1,gv2,gv3; //local version format: x.x.x
+char report_if[65]; 
+char report_mac[18]; 
+char report_ip[INET6_ADDRSTRLEN*2];
 
-int read_version(const char *path) {
-  FILE *fp = fopen(path, "r");
-  char line[1024];
-  gv1 = gv2 = gv3 = 0;
-  if (fp == 0) {
-    CWLog("fopen(%s) error: %s", path, strerror(errno));
-    return -1;
-  }
-  if (fgets(line, sizeof(line), fp)) {
-    sscanf(line, "%d.%d.%d", &gv1, &gv2, &gv3);
-    CWDebugLog("version info: %d.%d.%d", gv1, gv2, gv3);
-  } else {
+int read_report_info(const char *path) {
+    char line[1024], errinfo[256];
+    FILE *fp = fopen(path, "r");
+    if (fp == 0) {
+        CWLog("read_report_if_name() fopen(%s) error: %s", path, strerror(errno));
+        return -1;
+    }
+    if (fgets(line, sizeof(line), fp)) {
+        sscanf(line, "%s", report_if);
+        CWLog("Read upgrade report interface name:[%s]", report_if);
+    } else {
+        CWLog("Read upgrade report interface name error: %s", strerror(errno));
+        fclose(fp);
+        return -1;
+    }
     fclose(fp);
-    return -1;
-  }
-  fclose(fp);
 
-  return 0;
+    if (getifmac(report_if, report_mac, sizeof(report_mac), errinfo, sizeof(errinfo)) < 0){
+        CWLog("%s", errinfo);
+        return -1;
+    }
+    CWLog("Read upgrade report interface  MAC:[%s]", report_mac);
+
+    if (getifaddr(report_if, AF_INET, report_ip, sizeof(report_ip), errinfo, sizeof(errinfo)) < 0) {
+        CWLog("%s", errinfo);
+        return -1;
+    }
+    char *p = strrchr(report_ip, '%'); if (p) *p = 0; // cut off '%' if AF_INET6's report_ip
+
+    CWLog("Read upgrade report interface addr:[%s]", report_ip);
+
+    return 0;
 }
 
+int read_version(const char *path) {
+    char line[1024];
+    FILE *fp = fopen(path, "r");
+    gv1 = gv2 = gv3 = 0;
+    if (fp == 0) {
+        CWLog("fopen(%s):%s", path, strerror(errno));
+        return -1;
+    }
+    if (fgets(line, sizeof(line), fp)) {
+        sscanf(line, "%d.%d.%d", &gv1, &gv2, &gv3);
+        CWLog("Read %s version info: %d.%d.%d", path, gv1, gv2, gv3);
+    } else {
+        CWLog("Read %s version info error: %s", path, strerror(errno));
+        fclose(fp);
+        return -1;
+    }
+
+    fclose(fp);
+    return 0;
+}
+
+void load_sino_conf()
+{
+    CWLog("Load Sinoix configure");
+    if (read_version(FIRMWARE_IMAGE_INFO) < 0) {
+        if (read_version(FIRMWARE_VERSION) < 0)
+            CWLog("Read saved firmware version info failed");
+    }
+    if (read_report_info(REPORT_IF_NAME) < 0) {
+        CWLog("Load Sinoix configure failed");
+        exit(1);
+    }
+    CWLog("Load Sinoix configure done.");
+}
+
+int write_firmware_image_info(const char *path, const char *ver, const char *md5, const char *flen) {
+    char buff[1024];
+    FILE *fp = fopen(path, "w");
+    if (fp == 0) {
+        CWLog("write_firmware_image_info() fopen(%s) error: %s", path, strerror(errno));
+        return -1;
+    }
+    snprintf(buff, sizeof(buff), "%s\n%s\n%s\n", ver, md5, flen);
+    if (fputs(buff, fp) == EOF){
+        CWLog("write_firmware_image_info() fputs() error: %s", strerror(errno));
+        fclose(fp);
+        return -1;
+    } 
+    CWLog("Save firmware image info: %s", ver);
+    fclose(fp);
+    return 0;
+}
 
 int main (int argc, const char * argv[]) {
-	
 	
 	/* Daemon Mode */
  
@@ -348,7 +419,7 @@ int main (int argc, const char * argv[]) {
 	
 	if (argc <= 1)
 		printf("Usage: WTP working_path\n");
-#if 0
+#if 1
 	if ((pid = fork()) < 0)
 	exit(1);
 	else if (pid != 0)
@@ -366,13 +437,17 @@ int main (int argc, const char * argv[]) {
 
 	CWLogInitFile(WTP_LOG_FILE_NAME);
 
-  int old_value = gEnabledLog;
-  gEnabledLog = 1;
-  if (read_version(FILE_VERSION) < 0) // for version info
-    CWLog("read version info failed");
-  gEnabledLog = old_value;
-  signal(SIGCHLD, SIG_IGN);
-
+#ifdef CW_NO_DTLS
+	if( !CWErr(CWWTPLoadConfiguration()) ) {
+#else
+	if( !CWErr(CWSecurityInitLib())	|| !CWErr(CWWTPLoadConfiguration()) ) {
+#endif
+		CWLog("Can't start WTP");
+		exit(1);
+	}
+	
+    load_sino_conf();
+    signal(SIGCHLD, SIG_IGN);
 
 #ifndef CW_SINGLE_THREAD
 	CWDebugLog("Use Threads");
@@ -419,6 +494,7 @@ int main (int argc, const char * argv[]) {
 		exit(1);
 	}
 
+    /*
 #ifdef CW_NO_DTLS
 	if( !CWErr(CWWTPLoadConfiguration()) ) {
 #else
@@ -426,7 +502,7 @@ int main (int argc, const char * argv[]) {
 #endif
 		CWLog("Can't start WTP");
 		exit(1);
-	}
+	} */
 	
 	CWDebugLog("Init WTP Radio Info");
 	if(!CWWTPInitConfiguration())
@@ -542,7 +618,7 @@ CWBool CWWTPLoadConfiguration() {
     // Yuan Hong 状态上报到AC时要使用
     extern char **aclist;  // WTPProtocol.c file 
     extern int account; 
-    CW_CREATE_ARRAY_ERR(aclist, gCWACCount, char *, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);); //
+    CW_CREATE_ARRAY_ERR(aclist, gCWACCount, char *, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
     account = gCWACCount;
 
 	for(i = 0; i < gCWACCount; i++) {
@@ -552,7 +628,7 @@ CWBool CWWTPLoadConfiguration() {
 						 return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 
 		CW_CREATE_STRING_FROM_STRING_ERR(aclist[i], gCWACAddresses[i], // Yuan Hong
-						 return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);); //
+						 return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);); 
 	}
 	
 	CW_FREE_OBJECTS_ARRAY(gCWACAddresses, gCWACCount);

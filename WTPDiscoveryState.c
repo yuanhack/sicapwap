@@ -103,6 +103,9 @@ CWStateTransition CWWTPEnterDiscovery() {
 		/* send Requests to one or more ACs */
 		for(i = 0; i < gCWACCount; i++) {
 
+            extern int usindex;  // WTPProtocol.c,  Yuan Hong
+            usindex = i;
+
 			/* if this AC hasn't responded to us... */
 			if(!(gCWACList[i].received)) {
 				/* ...send a Discovery Request */

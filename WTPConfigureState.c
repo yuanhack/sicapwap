@@ -241,8 +241,9 @@ CWBool CWParseConfigureResponseMessage (char *msg,
             case CW_MSG_ELEMENT_WTP_FALLBACK_CW_TYPE:
                 if(!(CWParseWTPFallback(&completeMsg, len, valuesPtr))) return CW_FALSE;
                 break;
+
 #ifdef SINOIX_PAYLOAD
-            case CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE:  // 11132014 Yuan Hong
+            case CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE:  // Yuan Hong
                 // TODO: Parse Vendor Payload Data
                 sino_lock();
                 if (sino_count > 0) { 
@@ -253,14 +254,12 @@ CWBool CWParseConfigureResponseMessage (char *msg,
                 break;
 #endif
             default:
-                //CWLog("??? ParseConfigureResponce: Unknown Type %d", type);
                 return CWErrorRaise(CW_ERROR_INVALID_FORMAT, "Unrecognized Message Element");
         }
     }
 
     if(completeMsg.offset != len) 
-        return CWErrorRaise(CW_ERROR_INVALID_FORMAT,
-                "Garbage at the End of the Message");
+        return CWErrorRaise(CW_ERROR_INVALID_FORMAT, "Garbage at the End of the Message");
 
     CW_CREATE_ARRAY_ERR((*valuesPtr).radioOperationalInfo,
             (*valuesPtr).radioOperationalInfoCount,

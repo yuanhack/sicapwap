@@ -24,12 +24,12 @@ extern "C"
     char * next_line(const char *p); 
     char * fine_first_line_usable(const char *block, const char *item, const char *sym);
 
-    void read_conf(const char *conf, const char *comm_sym);
+    int read_conf(const char *conf, const char *comm_sym);
 
-    char tftp_locat[1024]; // for wtp_image.info tftp_location= (tftp_addr:tftp_port)
-    char wtp_version[65]; // for wtp_image.info wtp_version=x.x
-    char wtp_md5[65];    // 128bit -> 32, 256bit->64
-    char wtp_len[10];    // 4294967296 4096M 4G
+    char tftp_locat[1024]; // for firmware_image.info tftp_location= (tftp_addr:tftp_port)
+    char firmware_version[65]; // for firmware.info firmware_version=x.x
+    char firmware_md5[65];    // 128bit -> 32, 256bit->64
+    char firmware_len[10];    // 4294967296 4096M 4G
     char tftp_addr[1000]; 
     int  tftp_port;
 

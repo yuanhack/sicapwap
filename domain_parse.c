@@ -20,7 +20,7 @@ int domain_parse(const char *domain, char *buff, int len, char *errinfo, int err
             snprintf(errinfo, errlen, "inet_ntop error: %s", strerror(errno));
             return -1;
         }
-        printf("%s\n", buff);
+        //printf("inet_intop: %s\n", buff);
         break;
     }
     freeaddrinfo(answer);

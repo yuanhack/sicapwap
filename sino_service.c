@@ -21,16 +21,16 @@
 #define TIMEOUT_SEC           10
 
 #define TID                   (unsigned)pthread_self()
-
-//#define CREATE_DB "create table wtps(mac varchar(20) PRIMARY KEY, stat int);"
-#define CREATE_DB "create table wtps(mac varchar(20), version verchar(20), stat int, date verchar(14));"
+#define FIRMWARE_UPGRADE_INFO "firmware_upgrade_log"
+#define CREATE_DB_TAB(s) "create table "s\
+        "(mac varchar(20),interface verchar(16),addr verchar(46),"\
+        "version verchar(20),stat int,date verchar(14));"
 
 sqlite3 * db = 0;
 
 epoll_manager *em;                      // epoll manage handler
 
 struct list ls = LIST_HEAD_INIT(ls);
-//wtpc ls = {0, LIST_HEAD_INIT(ls.node)}; // wtp timeout manage link
 
 int create_socket_v4_server_for_addr                                                                       
     (int type, const struct sockaddr *addr, socklen_t alen, int qlen)
@@ -96,8 +96,7 @@ char * fmt_time(char *p, size_t len)
 
 #define CHECK_DATA   \
     if (local.magic != SS_MAGIC) {\
-        CWLog("receives fd %d invalid %d bytes, magic check error, discard. %s %d", \
-                fd, pc->len, __FILE__, __LINE__);\
+        CWLog("receives fd %d invalid %d bytes, magic check error, discard. %s %d", fd, pc->len, __FILE__, __LINE__);\
         pc->len = 0;\
         return;\
     }
@@ -116,26 +115,24 @@ void client_in_nonblock_et(fd_event *fe)
     if (pc == 0)  return; 
 eintr:
     while ((n = read(fd, buff, sizeof(buff))) > 0) {
-        printf("client [%05d] read len %d\n", fd, n);
-        pc->len+=n;
+        pc->len += n;
         if (n != sizeof(packet_stat)) {
-            if (!pc) printf("fd %d is logout 1\n", fd);
             pc->time = time(0);
             netpack = (packet_stat*)pc->buf;
             memcpy(pc->buf+pc->len, buff, n);
             if (pc->len >= sizeof(packet_stat)) {
                 pack_net_to_local(netpack, &local);
-                CHECK_DATA;
-                CWLog("Get joins packet, fd %d info: %d, %s, %s, %s\n", 
-                        fd, local.stat, local.ver, local.mac, local.ip);
+                CHECK_DATA; //  break if failed;
+                CWLog("Get joins packet, fd %d info: %d, %s, %s, %s, %s\n", 
+                        fd, local.stat, local.ver, local.mac, local.ip, local.ifname);
                 goto __insert_db;
             }
         } else {
             netpack = (packet_stat*)buff;
             pack_net_to_local(netpack, &local);
-            CHECK_DATA;
-            CWLog("Get full packet, fd %d info: %d, %s, %s, %s\n", 
-                    fd, local.stat, local.ver, local.mac, local.ip);
+            CHECK_DATA; // break if failed
+            CWLog("Get full packet, fd %d info: %d, %s, %s, %s, %s\n", 
+                    fd, local.stat, local.ver, local.mac, local.ip, local.ifname);
             goto __insert_db;
         }
     }
@@ -144,17 +141,23 @@ eintr:
         if (errno == EINTR)  goto eintr;
         CWLog("client [%05d] read ret %d to error %d:%s\n", fd, n, errno, strerror(errno));
         client_disc(fe);
+        return;
     } else if (n == 0) {
         CWLog("client [%05d] read ret %d to close\n", fd, n);
+        client_disc(fe);
+        return;
+    }
+    if (pc->len == 0) {
+        CWLog("Clean up the wrong date client [%05d]\n", fd);
         client_disc(fe);
     }
     return;
     char stime[15];
 __insert_db:
     fmt_time(stime, sizeof(stime));
-    snprintf(sql, sizeof(sql),"insert into wtps(mac, version, stat, date) "
-            "values('%s', '%s', '%d', '%s');", 
-            local.mac, local.ver, local.stat, stime);
+    snprintf(sql, sizeof(sql),"insert into %s(mac, version, stat, date, interface, addr) "
+            "values('%s', '%s', '%d', '%s', '%s', '%s');", FIRMWARE_UPGRADE_INFO,
+            local.mac, local.ver, local.stat, stime, local.ifname, local.ip);
     if (sqlite3_exec(db, sql, 0, 0, &err) != SQLITE_OK) {
         CWLog("%s %s %d insert err: %s", local.mac, local.ver, local.stat, err);
         sqlite3_free(err);
@@ -215,7 +218,7 @@ void client_conn(epoll_manager *em, int fd)
     ++wtps;
 
     CWLog("fd %d online time %ld", fe->fd, pc->time);
-    printf("fd %d online time %ld\n", fe->fd, pc->time);
+    //printf("fd %d online time %ld\n", fe->fd, pc->time);
 }
 
 void tcp_server_in(fd_event* fe)
@@ -259,7 +262,8 @@ void sino_epoll_open()
 
     int tcpsfd = create_socket_v4_server(SOCK_STREAM, (char*)"0.0.0.0", SINO_STAT_PORT, 1000);
     if (tcpsfd < 0) {
-        printf("create_socket_v4_server tcp error: %s\n", strerror(errno));
+        CWLog("create_socket_v4_server tcp error: %s\n", strerror(errno));
+        //printf("create_socket_v4_server tcp error: %s\n", strerror(errno));
         exit(1);
     }
     CWLog("Image Status Receive Server Create Success: 0.0.0.0:%d TCP", SINO_STAT_PORT);
@@ -291,10 +295,10 @@ void db_open()
         CWLog(": %s", sqlite3_errmsg(db));
         exit(1);
     }
-    ret = sqlite3_exec(db, CREATE_DB, 0, 0, 0);
+    ret = sqlite3_exec(db, CREATE_DB_TAB(FIRMWARE_UPGRADE_INFO), 0, 0, 0);
     if (ret != SQLITE_OK && ret != SQLITE_ERROR) {
         CWLog("ret %d: %s", ret, sqlite3_errmsg(db));
-        printf("ret %d: %s\n", ret, sqlite3_errmsg(db));
+        //printf("ret %d: %s\n", ret, sqlite3_errmsg(db));
         exit(1);
     }
     CWLog("connect %s success\n", path);

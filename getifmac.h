@@ -1,6 +1,7 @@
 #ifndef __YH_GETIFMAC_H__
 #define __YH_GETIFMAC_H__
 
+#include <unistd.h>
 #include <sys/socket.h>
 #include <sys/ioctl.h>
 #include <string.h>
@@ -22,7 +23,7 @@ extern "C"
 #pragma pack(pop)
 
 
-int get_mac(const char *itf_name, 
+int getifmac(const char *itf_name, 
         char *macbuf, int len, 
         char *errinfo, int errlen);
 

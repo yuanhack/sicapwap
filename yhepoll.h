@@ -55,10 +55,9 @@ typedef struct fd_event {
 	struct epoll_event  event;   
     epoll_manager       *em;    // epoll manager
     void                *ptr;   // user data ptr, user alloc/free
-    char                clean;  // (be called notify...del/release)
+    char                clean;  // (be called notify_xxx_del/release)
 
-    // heap  flag  FD_EVENT_MAGIC_HEAP
-    // stack flag  0 
+    // heap flag: FD_EVENT_MAGIC_HEAP, stack flag  0 
     unsigned int heap;
 
 	// event callback function:

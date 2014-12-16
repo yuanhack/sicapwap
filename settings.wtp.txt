@@ -2,6 +2,5 @@
 #
 
 #
-#<IF_NAME>    wlan2
 <IF_NAME>    p7p1
 
