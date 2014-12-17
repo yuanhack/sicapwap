@@ -8,7 +8,7 @@ typedef unsigned char uchar;
 
 // Updata process config 
 #define TFTPBOOT        "/tftpboot"
-#define REPORT_IF_NAME  "report-if.name"  //
+#define REPORT_IF_NAME  "report-if.name"
 
 // 固件下载保存路径
 #define FIRMWARE_IMAGE_PATH "/tmp/firmware_image"

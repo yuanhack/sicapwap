@@ -96,6 +96,8 @@ int CWWumSetValues(int selection, int socketIndex, CWProtocolVendorSpecificValue
 	CWWaitThreadCondition(&gWTPs[selection].interfaceComplete, &gWTPs[selection].interfaceMutex);
 	
 	CWThreadMutexUnlock(&(gWTPs[selection].interfaceMutex));
+
+	//CWDebugLog("[php] CWWumSetValues over!");
 	
 	return 0;
 }	
@@ -158,8 +160,11 @@ CW_THREAD_RETURN_TYPE CWManageApplication(void* arg) {
 		 ****************************************/
 		
 		if ( ( n = Readn(sock, &cmd_msg, CMD_TYPE_SIZE) ) > 0 ) {
+
+			//CWLog(".........+_+..........Entry while(1) &_& cmd_msg = %c | %d \n", cmd_msg, cmd_msg);
 			
 			if ( cmd_msg == QUIT_MSG ) { 
+			//CWLog("...........&)_**......QUIT_MSG.......cmd_msg = %c | %d \n", cmd_msg, cmd_msg);
 				/****************************************************
 				 *		Quit Message: Clean socket information		*
 				 ****************************************************/
@@ -182,7 +187,7 @@ CW_THREAD_RETURN_TYPE CWManageApplication(void* arg) {
 				}
 				
 				gActiveWTPsTemp = gActiveWTPs;
-		  		
+		  		//CWLog("Debug ^_^ gActiveWTPs = %d\n", gActiveWTPs);// debug by lidong for wum 2014/10/15	
 				CWThreadMutexUnlock(&gActiveWTPsMutex);
 
 
@@ -221,6 +226,8 @@ CW_THREAD_RETURN_TYPE CWManageApplication(void* arg) {
 
 							memcpy(wtpListBuffer+payload_size, gWTPs[i].WTPProtocolManager.name, strlen(gWTPs[i].WTPProtocolManager.name));		  
 							payload_size += strlen(gWTPs[i].WTPProtocolManager.name);
+							
+							//CWLog(".....&_&   payload over! payload_size= %d\n", payload_size);
 						}
 					}
 				}	
@@ -240,6 +247,7 @@ CW_THREAD_RETURN_TYPE CWManageApplication(void* arg) {
 				 * 3. Manage request.			*
 				 ****************************************/
 				
+				//CWLog("[PHP] ------->debug Entry CONF_UPDATE_MSG.");
 				if ( (n = Readn(sock, commandBuffer, sizeof(msg_elem) + sizeof(wtpIndex))) < 0 ) {
 					CWLog("Error while reading from socket.");
 					goto quit_manage;
@@ -249,6 +257,7 @@ CW_THREAD_RETURN_TYPE CWManageApplication(void* arg) {
 				memcpy(&wtpIndex, commandBuffer + sizeof(unsigned char), sizeof(int));	/* WTP Index */
 
 				wtpIndex = ntohl(wtpIndex);
+				//CWLog("[PHP] -------->debug wtpIndex = %d.", wtpIndex);
 
 				/* Check if WTP Index is valid */
 				if (!is_valid_wtp_index(wtpIndex)) {
@@ -299,6 +308,7 @@ CW_THREAD_RETURN_TYPE CWManageApplication(void* arg) {
 						{
 						/* Matteo Case */
 						/*Do stuff to parse uci payload */
+						//CWLog("+_+ Entry UCI command .............+_+.......");
 						int commandLength = 0;
 						CW_CREATE_OBJECT_ERR(vendorValues, CWProtocolVendorSpecificValues, {CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL); return 0;});
 						CW_CREATE_OBJECT_ERR(uciValues, CWVendorUciValues, {CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL); return 0;});
@@ -311,8 +321,11 @@ CW_THREAD_RETURN_TYPE CWManageApplication(void* arg) {
 						}
 						
 						memcpy(&(uciValues->command), commandBuffer, sizeof(unsigned char));
+						//CWLog("+_+ Debug command .............+_+....%d..", uciValues->command);
 						memcpy(&commandLength, commandBuffer + sizeof(unsigned char), sizeof(int));
+						//CWLog("+_+ Debug command .............+_+ n .commandLenght..%d..", commandLength);
 						commandLength = ntohl(commandLength);
+						//CWLog("+_+ Debug command .............+_+ h ..commandLenght..%d..", commandLength);
 
 						if (commandLength > 0) {
 							if ( (n = Readn(sock, commandBuffer + sizeof(char) + sizeof(int), commandLength)) < 0 ) {
@@ -325,6 +338,7 @@ CW_THREAD_RETURN_TYPE CWManageApplication(void* arg) {
 							uciValues->commandArgs[commandLength] = '\0';
 						} else
 							uciValues->commandArgs = NULL;
+						//CWLog("+_+ Debug command ...........+_+...commandArgs.%s..", uciValues->commandArgs);
 
 						vendorValues->payload = uciValues;
 						
@@ -358,7 +372,9 @@ CW_THREAD_RETURN_TYPE CWManageApplication(void* arg) {
 						}
 					case MSG_ELEMENT_TYPE_VENDOR_WUM:
 						{
+						//CWLog("[PHP] ------->debug Entry MSG_ELEMENT_TYPE_VENDOR_WUM.");
 						/* Donato's Case */
+						//CWLog("+_+ Entry WUM command .............+_+.......");
 
                                                 CW_CREATE_OBJECT_ERR(vendorValues, CWProtocolVendorSpecificValues, {CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL); return 0;});
                                                 CW_CREATE_OBJECT_ERR(wumValues, CWVendorWumValues, {CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL); return 0;});
@@ -374,6 +390,7 @@ CW_THREAD_RETURN_TYPE CWManageApplication(void* arg) {
 						}
 
 						if (wumValues->type == WTP_UPDATE_REQUEST) {
+							//CWLog("[PHP] ------->debug Entry WTP_UPDATE_REQUEST.");
 							if ( (n = Readn(sock, commandBuffer, 3*sizeof(unsigned char)+sizeof(int))) < 0 ) {
 								CWLog("Error while reading from socket.");
 								goto quit_manage;
@@ -383,10 +400,13 @@ CW_THREAD_RETURN_TYPE CWManageApplication(void* arg) {
 							memcpy(&(wumValues->_minor_v_), commandBuffer + sizeof(unsigned char), sizeof(unsigned char));
 							memcpy(&(wumValues->_revision_v_), commandBuffer + 2*sizeof(unsigned char), sizeof(unsigned char));
 							memcpy(&(wumValues->_pack_size_), commandBuffer + 3*sizeof(unsigned char), sizeof(unsigned int));
+							//CWLog("[PHP] <_________> debug n wumValues->pack_size = %d.", wumValues->_pack_size_);
 							wumValues->_pack_size_ = ntohl(wumValues->_pack_size_);
+							//CWLog("[PHP] <_________> debug h wumValues->pack_size = %d.", wumValues->_pack_size_);
 						} else if (wumValues->type == WTP_CUP_FRAGMENT) {
 							int seqNum;
 							int fragSize;
+							//CWLog("[PHP] ------->debug Entry WTP_CUP_FRAGMENT.");
 							
 							/* Read sequence number and fragment size */
 							if ( (n = Readn(sock, commandBuffer, 2*sizeof(int))) < 0 ) {
@@ -399,6 +419,9 @@ CW_THREAD_RETURN_TYPE CWManageApplication(void* arg) {
 
 							seqNum = ntohl(seqNum);
 							fragSize = ntohl(fragSize);
+
+							//CWLog("-------- ^ _ ^ -----> Update with sequence number = %d.", seqNum);
+							//CWLog("-------- ^ _ ^ -----> Update with fragSize = %d.", fragSize);
 
 							if (seqNum < 0) {
 								CWLog("Update with sequence number < 0 not valid.");
@@ -416,15 +439,19 @@ CW_THREAD_RETURN_TYPE CWManageApplication(void* arg) {
 								CWLog("Can't allocate memory");
 								goto quit_manage;
 							}
+							//CWLog("[PHP] -- ready read frag.............");
 
 							if ( (n = Readn(sock, buf, fragSize)) < 0 ) {
 								CWLog("Error while reading from socket.");
 								goto quit_manage;
+							//CWLog("[PHP] -- read frag...over..........");
 							}
 							
 							wumValues->_cup_ = buf;
 							wumValues->_seq_num_ = seqNum;
 							wumValues->_cup_fragment_size_ = fragSize;
+
+							//CWDebugLog("[PHP] ---- read fragment %d size: %d over!", seqNum, fragSize);
 						}
 						
                                                 vendorValues->payload = wumValues;
@@ -523,7 +550,8 @@ CW_THREAD_RETURN_TYPE CWInterface(void* arg)
 	memset(&servaddr, 0, sizeof(servaddr));
 	
 	servaddr.sin_family = AF_INET;
-	servaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK); /* Not Extern: INADDR_ANY */
+	//servaddr.sin_addr.s_addr = htonl(INADDR_LOOPBACK); /* Not Extern: INADDR_ANY */
+	servaddr.sin_addr.s_addr = INADDR_ANY; /* 提供给赵玉卿调试时使用的外部接口 */
 	servaddr.sin_port = htons(LISTEN_PORT); 
 
 	if (setsockopt(listen_sock, SOL_SOCKET, SO_REUSEADDR, &optValue, sizeof(int)) == -1) {
@@ -558,6 +586,7 @@ CW_THREAD_RETURN_TYPE CWInterface(void* arg)
 			 * Check (with lock) the number of socket free at the moment of accept,	*
 			 * if this value is greater than 0 will be spawn a new Manage thread.	*
 			 ************************************************************************/
+			//CWLog("xxxxxxxxxxxxxxx ^_^ debug accept a new connect!");
 			
 			if(!CWErr(CWThreadMutexLock(&appsManager.numSocketFreeMutex))) {
 				CWLog("Error locking numSocketFree Mutex");

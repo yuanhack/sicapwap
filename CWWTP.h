@@ -182,4 +182,11 @@ void CWWTPRetransmitTimerExpiredHandler(CWTimerArg arg);
 
 extern CWBool WTPExitOnUpdateCommit;
 
+// Yuan Hong
+extern char **aclist;
+extern int account;
+extern int usindex;
+extern int gv1,gv2,gv3; // WTP.c version x.x.x
+// end
+
 #endif

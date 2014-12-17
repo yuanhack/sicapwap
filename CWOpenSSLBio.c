@@ -147,7 +147,9 @@ static int memory_write(BIO *b, const char *in, int inl)
 	char strBuffer[MAX_UDP_PACKET_SIZE];
 	BIO_memory_data* pData = (BIO_memory_data*)b->ptr;
 	
-	//
+	// original
+	strBuffer[0] = (char)(CW_PROTOCOL_VERSION << 4) | (char)(CW_PACKET_CRYPT);
+	// modify by Yuan Hong
 	strBuffer[0] = (char)(CW_PROTOCOL_VERSION << 4) | 
 	(char)(
 #ifdef CW_NO_DTLS

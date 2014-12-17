@@ -936,7 +936,7 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
         data = (void*)data + sizeof(sino_elem) + dlen;
     }
     if (check) {
-        extern int gv1,gv2,gv3; // WTP.c version x.x.x
+        //extern int gv1,gv2,gv3; // WTP.c version x.x.x
         if (v1 > gv1 || v2 > gv2 || v3 > gv3) {
             CWLog("Are preparing to update the version %d.%d.%d", v1, v2, v3);
             do {
@@ -1141,10 +1141,6 @@ int send_pack(packet_stat *pack, const char *dst, int port)
     close(fd);
     return 0;
 }
-
-char **aclist;
-int account;
-int usindex;
 
 void stat_report(int stat, char *ver, char *mac, char *ip, char *ifname)
 {

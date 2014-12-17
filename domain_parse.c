@@ -18,6 +18,7 @@ int domain_parse(const char *domain, char *buff, int len, char *errinfo, int err
     for (curr = answer; curr != NULL; curr = curr->ai_next) {
         if (!inet_ntop(AF_INET, &(((struct sockaddr_in *)(curr->ai_addr))->sin_addr), buff, len)) {
             snprintf(errinfo, errlen, "inet_ntop error: %s", strerror(errno));
+    		freeaddrinfo(answer);
             return -1;
         }
         //printf("inet_intop: %s\n", buff);

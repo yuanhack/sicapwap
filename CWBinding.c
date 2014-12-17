@@ -229,13 +229,17 @@ CWBool CWParseTransportHeaderBinding(CWProtocolMessage *msgPtr, CWBindingTranspo
 	 ************************************************************************/
 
 	if(valuesPtr->dataRate == 255) {
-	  if (valuesPtr->SNR == 1 )
+	  if (valuesPtr->SNR == 1 ) {
 		msgPtr->data_msgType=CW_DATA_MSG_FREQ_STATS_TYPE;
-	  else
+		//CWDebugLog(".....> debug by lidong dataRate == 255 SNR == 1 msgPtr->data_msgType=CW_DATA_MSG_FREQ_STATS_TYPE.");
+	  }else{
 		msgPtr->data_msgType=CW_DATA_MSG_STATS_TYPE;
-	}
-	else if(valuesPtr->dataRate == 0) 
+		//CWDebugLog(".....> debug by lidong dataRate == 255 SNR != 1 msgPtr->data_msgType=CW_DATA_MSG_STATS_TYPE.");
+	  }
+	}else if(valuesPtr->dataRate == 0) {
 	  msgPtr->data_msgType=CW_DATA_MSG_FRAME_TYPE;
+	  //CWDebugLog(".....> debug by lidong dataRate == 0 msgPtr->data_msgType=CW_DATA_MSG_STATS_TYPE.");
+	}
 
 /* Mauro: preleva il byte meno significativo del sottocampo Data */
 	valuesPtr->dataRate = ((valuesPtr->dataRate)<<8) | CWGetField32(val, CW_TRANSPORT_HEADER_DATARATE_1_START, CW_TRANSPORT_HEADER_DATARATE_1_LEN);

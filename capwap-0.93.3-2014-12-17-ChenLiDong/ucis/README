@@ -1,0 +1,10 @@
+UCT - UCI Commend Tool
+
+Uct (UCI Command Tool) is the command line tool used to send uci command
+requests to the WTPs. Of course it is executed on the AC machine and interacts
+with the AC Interface.
+
+To compile it, just run 'make'.
+
+For further details about how to use it, refer to the document UciCommandTool.pdf
+in the docs sub-directory of this source tree.
