@@ -26,12 +26,15 @@ extern "C"
 
     int read_conf(const char *conf, const char *comm_sym);
 
-    char tftp_locat[1024]; // for firmware_image.info tftp_location= (tftp_addr:tftp_port)
+    char tftp_locat[1024]; // for firmware_image.info tftp_location=addr:port
     char firmware_version[65]; // for firmware.info firmware_version=x.x
     char firmware_md5[65];    // 128bit -> 32, 256bit->64
     char firmware_len[10];    // 4294967296 4096M 4G
     char tftp_addr[1000]; 
     int  tftp_port;
+    char rept_locat[1024]; // 上报服务地址 rept_location=addr:port
+    char rept_addr[1000];  // ip 或 域名
+    int  rept_port;        // 端口
 
 #ifdef __cplusplus
 }

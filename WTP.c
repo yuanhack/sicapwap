@@ -320,15 +320,12 @@ cw_failure:
 
 // Yuan Hong
 //local version format: x.x.x 
-int  gv1,gv2,gv3; 
+int  tmpv1, tmpv2, tmpv3; 
+int  etcv1, etcv2, etcv3; 
+int  maxv1, maxv2, maxv3;
 char report_if[65]; 
 char report_mac[18]; 
 char report_ip[INET6_ADDRSTRLEN*2];
-
-// firmware upgrade use
-char **aclist;  
-int account;
-int usindex;
 
 int read_report_info(const char *path) {
     char line[1024], errinfo[256];
@@ -364,19 +361,39 @@ int read_report_info(const char *path) {
     return 0;
 }
 
-int read_version(const char *path) {
+int read_version_tmp(const char *path) {
     char line[1024];
+    tmpv1 = tmpv2 = tmpv3 = 0;
     FILE *fp = fopen(path, "r");
-    gv1 = gv2 = gv3 = 0;
     if (fp == 0) {
         CWLog("fopen(%s):%s", path, strerror(errno));
         return -1;
     }
     if (fgets(line, sizeof(line), fp)) {
-        sscanf(line, "%d.%d.%d", &gv1, &gv2, &gv3);
-        CWLog("Read %s version info: %d.%d.%d", path, gv1, gv2, gv3);
+        sscanf(line, "%d.%d.%d", &tmpv1, &tmpv2, &tmpv3);
+        CWLog("Read tmp version info: %d.%d.%d %s", tmpv1, tmpv2, tmpv3, path);
     } else {
-        CWLog("Read %s version info error: %s", path, strerror(errno));
+        CWLog("Read tmp version info error: %s: %s", path, strerror(errno));
+        fclose(fp);
+        return -1;
+    }
+
+    fclose(fp);
+    return 0;
+}
+int read_version_etc(const char *path) {
+    char line[1024];
+    etcv1 = etcv2 = etcv3 = 0;
+    FILE *fp = fopen(path, "r");
+    if (fp == 0) {
+        CWLog("fopen(%s):%s", path, strerror(errno));
+        return -1;
+    }
+    if (fgets(line, sizeof(line), fp)) {
+        sscanf(line, "%d.%d.%d", &etcv1, &etcv2, &etcv3);
+        CWLog("Read sys version info: %d.%d.%d %s", etcv1, etcv2, etcv3, path);
+    } else {
+        CWLog("Read sys version info error: %s: %s", path, strerror(errno));
         fclose(fp);
         return -1;
     }
@@ -385,13 +402,48 @@ int read_version(const char *path) {
     return 0;
 }
 
+// 按位权比较，如果前3者大于后三者返回1，相同返回0
+int maxver(int a1, int a2, int a3, int b1, int b2, int b3)
+{
+    if (a1 > b1) return 1; 
+    else {
+        if (a1 < b1) return 0; 
+        else { 
+            if (a2 > b2) return 1;
+            else { 
+                if (a2 < b2) return 0;
+                else { 
+                    if (a3 > b3) return 1;
+                    else { 
+                        if (a3 < b3) return 0;
+                        else { 
+                            return 0; // Same
+                        }
+                    }
+                }
+            }
+
+        }
+    }
+}
+
 void load_sino_conf()
 {
     CWLog("Load Sinoix configure");
-    if (read_version(FIRMWARE_IMAGE_INFO) < 0) {
-        if (read_version(FIRMWARE_VERSION) < 0)
-            CWLog("Read saved firmware version info failed");
-    }
+
+    read_version_tmp(FIRMWARE_IMAGE_INFO);
+    read_version_etc(FIRMWARE_VERSION);
+
+    if (maxver(tmpv1, tmpv2, tmpv3, etcv1, etcv2, etcv3)) {
+        maxv1 = tmpv1; 
+        maxv2 = tmpv2; 
+        maxv3 = tmpv3;
+    } else {
+        maxv1 = etcv1; 
+        maxv2 = etcv2; 
+        maxv3 = etcv3;
+     }
+
     if (read_report_info(REPORT_IF_NAME) < 0) {
         CWLog("Load Sinoix configure failed");
         exit(1);
@@ -425,7 +477,7 @@ int main (int argc, const char * argv[]) {
 	
 	if (argc <= 1)
 		printf("Usage: WTP working_path\n");
-#if 1
+#if 0
 	if ((pid = fork()) < 0)
 	exit(1);
 	else if (pid != 0)
@@ -621,11 +673,6 @@ CWBool CWWTPLoadConfiguration() {
 			    CWACDescriptor,
 			    return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 
-    // Yuan Hong 状态上报到AC时要使用
-    extern char **aclist;  // WTPProtocol.c file 
-    extern int account; 
-    CW_CREATE_ARRAY_ERR(aclist, gCWACCount, char *, return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
-    account = gCWACCount;
 
 	for(i = 0; i < gCWACCount; i++) {
 
@@ -633,8 +680,6 @@ CWBool CWWTPLoadConfiguration() {
 		CW_CREATE_STRING_FROM_STRING_ERR(gCWACList[i].address, gCWACAddresses[i],
 						 return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL););
 
-		CW_CREATE_STRING_FROM_STRING_ERR(aclist[i], gCWACAddresses[i], // Yuan Hong
-						 return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL);); 
 	}
 	
 	CW_FREE_OBJECTS_ARRAY(gCWACAddresses, gCWACCount);

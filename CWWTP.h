@@ -183,10 +183,14 @@ void CWWTPRetransmitTimerExpiredHandler(CWTimerArg arg);
 extern CWBool WTPExitOnUpdateCommit;
 
 // Yuan Hong
-extern char **aclist;
-extern int account;
-extern int usindex;
-extern int gv1,gv2,gv3; // WTP.c version x.x.x
+extern int  tmpv1, tmpv2, tmpv3; 
+extern int  etcv1, etcv2, etcv3; 
+extern int  maxv1, maxv2, maxv3;
+extern char report_if[65]; 
+extern char report_mac[18];
+extern char report_ip[INET6_ADDRSTRLEN*2];
+// 按位权比较，如果前3者大于后三者返回1，相同返回0
+int maxver(int a1, int a2, int a3, int b1, int b2, int b3);
 // end
 
 #endif

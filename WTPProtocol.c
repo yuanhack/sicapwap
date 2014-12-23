@@ -851,6 +851,8 @@ char md5[65];
 char report_if_name[65];
 off_t flen;
 int  tftp_port = 69;
+char rept_addr[1000];
+int  rept_port=12345;
 // 20141114 Yuan Hong
 #ifdef SINOIX_PAYLOAD
 
@@ -877,6 +879,7 @@ void my_exit(int n)
 // WTP.c
 int write_firmware_image_info(const char *path, const char *ver, const char *md5, const char *flen);
 int get_report_if_name(char *if_name, int len);
+void stat_report(char *addr, int port, int stat, char *ver, char *mac, char *ip, char *ifname);
 
 void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
 {
@@ -909,21 +912,28 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
         switch (type) {
             case SI_FI_VERSION: SINO_CHECK_STRNCPY(version); 
                                 sscanf(version, "%d.%d.%d", &v1, &v2, &v3);
-                                CWLog("Ver %2d %d.%d.%d", dlen, v1, v2, v3);
+                                CWLog("  Version %2d [%d.%d.%d]", dlen, v1, v2, v3);
                                 break;
             case SI_FI_MD5:     SINO_CHECK_STRNCPY(md5); 
-                                CWLog("Md5 %2d %s", dlen, md5);
+                                CWLog(" Md5 code %2d [%s]", dlen, md5);
                                 break;
             case SI_FI_LEN:     SINO_CHECK_STRNCPY(blen); 
                                 flen = atoll(blen);
-                                CWLog("Len %2d %ld", dlen, flen);
+                                CWLog("Firm size %2d [%ld]", dlen, flen);
                                 break;
             case SI_TFTP_ADDR:  SINO_CHECK_STRNCPY(addr); 
-                                CWLog("Ads %2d %s", dlen, addr);
+                                CWLog("TFTP addr %2d [%s]", dlen, addr);
                                 break;
             case SI_TFTP_PORT:  SINO_CHECK_STRNCPY(bport); 
                                 tftp_port = atoi(bport);
-                                CWLog("Prt %2d %d", dlen, tftp_port);
+                                CWLog("TFTP port %2d [%d]", dlen, tftp_port);
+                                break;
+            case SI_REPT_ADDR:  SINO_CHECK_STRNCPY(rept_addr); 
+                                CWLog("Rept addr %2d [%s]", dlen, rept_addr);
+                                break;
+            case SI_REPT_PORT:  SINO_CHECK_STRNCPY(bport); 
+                                rept_port = atoi(bport);
+                                CWLog("Rept port %2d [%d]", dlen, rept_port);
                                 break;
             default: CWLog("Unknown: type %d", type);
                      break;
@@ -936,8 +946,8 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
         data = (void*)data + sizeof(sino_elem) + dlen;
     }
     if (check) {
-        //extern int gv1,gv2,gv3; // WTP.c version x.x.x
-        if (v1 > gv1 || v2 > gv2 || v3 > gv3) {
+        // 对比从AC传来的版本号和本地最大的版本号, 若AC的大则下载
+        if (maxver(v1, v2, v3, maxv1, maxv2, maxv3)) {
             CWLog("Are preparing to update the version %d.%d.%d", v1, v2, v3);
             do {
                 // Environment check and create
@@ -971,6 +981,7 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
                 if (fs.f_bfree * fs.f_bsize < flen + 1024) {
                     CWLog("Connot download: /tmp The space is insufficient (only %ld, need %ld + 1024).", 
                             fs.f_bsize * fs.f_bfree, flen);
+                    stat_report(rept_addr, rept_port, UPSTAT_ERR_LACKBUF, version, report_mac, report_ip, report_if);
                     break;
                 }
                 // Environment pass
@@ -981,9 +992,6 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
                     // child process, Yuan Hong
                     FILE *f; 
                     char cmd[1024],  new_md5[65]; 
-                    extern char report_if[65]; 
-                    extern char report_mac[18];
-                    extern char report_ip[INET6_ADDRSTRLEN*2];
                     int n;
 
                     setsid(); 
@@ -1000,8 +1008,7 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
                     sighandler_t old_handler;  
                     old_handler = signal(SIGCHLD, SIG_DFL);
 
-                    void stat_report(int stat, char *ver, char *mac, char *ip, char *ifname);
-                    stat_report(UPSTAT_ING, version, report_mac, report_ip, report_if);
+                    stat_report(rept_addr, rept_port, UPSTAT_ING, version, report_mac, report_ip, report_if);
 
                     //*
                     CWLog("Starting Update version %d.%d.%d Firmware", v1, v2, v3);
@@ -1013,7 +1020,7 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
                         if ((f = popen(cmd, "r")) == 0) {
                             CWLog("popen(tftp) error: %s", strerror(errno));
                             CWLog("! Download failed");
-                            stat_report(UPSTAT_ERR_TFTP, version, report_mac, report_ip, report_if);
+                            stat_report(rept_addr, rept_port, UPSTAT_ERR_TFTP, version, report_mac, report_ip, report_if);
                             CHILD_EXIT();
                         }
                         while(fgets(buff, sizeof(buff), f) != 0) {
@@ -1024,7 +1031,7 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
                         if (pclose(f) < 0) {
                             CWLog("pclose(tftp) error: %s", strerror(errno));
                             CWLog("! Download failed");
-                            stat_report(UPSTAT_ERR_TFTP, version, report_mac, report_ip, report_if);
+                            stat_report(rept_addr, rept_port, UPSTAT_ERR_TFTP, version, report_mac, report_ip, report_if);
                             CHILD_EXIT();
                         }
                         CWLog("popen(tftp) done");
@@ -1034,7 +1041,7 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
                         CWLog("popen(md5sum) begin", cmd);
                         if ((f = popen(cmd, "r")) == 0) {
                             CWLog("popen(md5sum) error: %s", cmd, strerror(errno));
-                            stat_report(UPSTAT_ERR_MD5, version, report_mac, report_ip, report_if);
+                            stat_report(rept_addr, rept_port, UPSTAT_ERR_MD5, version, report_mac, report_ip, report_if);
                             CHILD_EXIT();
                         }
                         fgets(buff, sizeof(buff), f);
@@ -1043,7 +1050,7 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
                         CWLog("Checker md5 [%s]", new_md5);
                         if (strncmp(md5, new_md5, strlen(md5))) {
                             CWLog("MD5 Check failure.");
-                            stat_report(UPSTAT_ERR_MD5, version, report_mac, report_ip, report_if);
+                            stat_report(rept_addr, rept_port, UPSTAT_ERR_MD5, version, report_mac, report_ip, report_if);
                             CHILD_EXIT();
                         } 
                         CWLog("MD5 Check Success.");
@@ -1055,18 +1062,32 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
                     } // */
                     if (write_firmware_image_info(FIRMWARE_IMAGE_INFO, version, md5, blen) < 0) {
                         CWLog("write_firmware_image_info error: %s", strerror(errno));
-                        stat_report(UPSTAT_ERR_SAVEINFO, version, report_mac, report_ip, report_if);
+                        stat_report(rept_addr, rept_port, UPSTAT_ERR_SAVEINFO, version, report_mac, report_ip, report_if);
                         CHILD_EXIT();
                     }
-                    stat_report(UPSTAT_SUC, version, report_mac, report_ip, report_if);
+                    stat_report(rept_addr, rept_port, UPSTAT_SUC, version, report_mac, report_ip, report_if);
                     CWLog("Download Successful");          // All Finish
                     signal(SIGCHLD, old_handler);          // Solve: No child processes
                     CHILD_EXIT();
                 } // if ((pid = fork()) < 0) 
             } while (0);
-        } // if (v1 > gv1 || v2 > gv2 || v3 > gv3)
-        else 
-            CWLog("Don't need to be updated");
+        } // if (maxver(v1, v2, v3, maxv1, maxv2, maxv3))
+        else  { 
+            // 本地版本大于或等于AC上的版本，不需下载
+            CWLog("Firmware do not need to download");
+            do { 
+                // 判断本地缓存版本和现有版本，决定是否更新固件
+                if (maxver(etcv1, etcv2, etcv3, tmpv1, tmpv2, tmpv3)) {
+                    CWLog("Firmware do not need to update");
+                    break;
+                }
+                CWLog("Firmware need to update");
+                // 更新tmp缓存的固件
+                CWLog("Startup update firmware...");
+
+                // --------------
+            } while (0);
+        }
     } // if (check)
     CWLog("************************************************");
 }
@@ -1107,7 +1128,7 @@ int send_pack(packet_stat *pack, const char *dst, int port)
 {
     char errinfo[128];
 
-    // 在一次固件下载回话中，状态上报不允许进行重复解析.
+    // 在固件下载状态上报回话中，不允许进行重复解析
     static char ip[128];  
     static int flag = 0;
 
@@ -1142,11 +1163,11 @@ int send_pack(packet_stat *pack, const char *dst, int port)
     return 0;
 }
 
-void stat_report(int stat, char *ver, char *mac, char *ip, char *ifname)
+void stat_report(char *addr, int port, int stat, char *ver, char *mac, char *ip, char *ifname)
 {
     packet_stat pack;
     pack_net_stat(&pack, stat, ver, mac, ip, ifname);
-    send_pack(&pack, aclist[usindex], 12345);
+    send_pack(&pack, addr, port);
 }
 
 #endif

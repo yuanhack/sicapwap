@@ -14,6 +14,7 @@
 #define WTP_LEN       "firmware_len="
 //#define WTP_SHA1      "firmware_SHA1="
 #define TFTP_LOCAT    "tftp_location="
+#define REPT_LOCAT    "rept_location="
 
 extern char tftp_locat[1024];
 extern char firmware_version[65];
@@ -21,6 +22,8 @@ extern char firmware_md5[65];    // 128bit -> 32, 256bit->64
 extern char firmware_len[10];    // 4294967296 4096M 4G
 extern char tftp_addr[1000]; 
 extern int  tftp_port = 0;
+extern char rept_addr[1000]; 
+extern int  rept_port = 0;
 
 char _local_comm_sym[32] = {0};
 
@@ -225,6 +228,7 @@ int read_conf(const char *conf, const char *comm_sym)
     set_line_comment_symbol(comm_sym);
 
     set_item_s(_buff, TFTP_LOCAT,  tftp_locat);
+    set_item_s(_buff, REPT_LOCAT,  rept_locat);
     set_item_s(_buff, WTP_VERSION, firmware_version);
     set_item_s(_buff, WTP_MD5, firmware_md5);
     set_item_s(_buff, WTP_LEN, firmware_len);

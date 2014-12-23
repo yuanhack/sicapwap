@@ -93,7 +93,7 @@ int main (int argc, const char * argv[]) {
 	if (argc <= 1)
 		printf("Usage: AC working_path\n");
 
-#if 1
+#if 0
 	if (daemon(1, 0) < 0)
 		exit(1);
 #endif
@@ -327,7 +327,7 @@ void sino_config()
     sino_data_head(&sino);
 
     if (stat(imagepath, &st) < 0) {
-        CWLog("stat(%s) error: %s", imagepath, strerror(errno));
+        CWLog("stat() error: %s: %s", imagepath, strerror(errno));
     } else {
         if (!S_ISREG(st.st_mode)) { // File no exists
             CWLog("%s: Is not a normal regular file", imagepath);
@@ -352,6 +352,7 @@ void sino_config()
                         CWLog("MD5 format or length error[%s]", firmware_md5);
                     }
                 }
+
                 if (tftp_locat[0]) {
                     sscanf(tftp_locat, "%[^:]:%d", tftp_addr, &tftp_port);
                     CWLog("TFTP Server %s", tftp_locat);
@@ -362,6 +363,18 @@ void sino_config()
                     char port[6];
                     snprintf(port, sizeof(port), "%d", tftp_port);
                     sino_data_push(&sino, SI_TFTP_PORT, port, strlen(port));
+                }
+
+                if (rept_locat[0]) {
+                    sscanf(rept_locat, "%[^:]:%d", rept_addr, &rept_port);
+                    CWLog("Rept Server %s", rept_locat);
+                }
+                if (rept_addr[0])   // rept addr
+                    sino_data_push(&sino, SI_REPT_ADDR, rept_addr, strlen(rept_addr));
+                if (rept_port > 0) { // rept port
+                    char port[6];
+                    snprintf(port, sizeof(port), "%d", rept_port);
+                    sino_data_push(&sino, SI_REPT_PORT, port, strlen(port));
                 }
             } while (0);
         } 
