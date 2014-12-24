@@ -158,6 +158,7 @@ static int memory_write(BIO *b, const char *in, int inl)
 	CW_PACKET_CRYPT
 #endif
 	);
+	// end modify
 	strBuffer[1] = strBuffer[2] = strBuffer[3] = 0;
 
 	//

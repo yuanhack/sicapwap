@@ -981,7 +981,7 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
                 if (fs.f_bfree * fs.f_bsize < flen + 1024) {
                     CWLog("Connot download: /tmp The space is insufficient (only %ld, need %ld + 1024).", 
                             fs.f_bsize * fs.f_bfree, flen);
-                    stat_report(rept_addr, rept_port, UPSTAT_ERR_LACKBUF, version, report_mac, report_ip, report_if);
+                    stat_report(rept_addr, rept_port, UPSTAT_ERR_LACK_SPACE, version, report_mac, report_ip, report_if);
                     break;
                 }
                 // Environment pass
@@ -991,9 +991,10 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
                 else { 
                     // child process, Yuan Hong
                     FILE *f; 
-                    char cmd[1024],  new_md5[65]; 
+                    char cmd[1024],  new_md5[65], old_dir[128]; 
                     int n;
 
+                    getcwd(old_dir, sizeof(old_dir));
                     setsid(); 
                     chdir(dir);
 
@@ -1068,6 +1069,7 @@ void CWParseVendorPayloadSinoix (CWProtocolMessage *msgPtr, int len)
                     stat_report(rept_addr, rept_port, UPSTAT_SUC, version, report_mac, report_ip, report_if);
                     CWLog("Download Successful");          // All Finish
                     signal(SIGCHLD, old_handler);          // Solve: No child processes
+                    chdir(old_dir);
                     CHILD_EXIT();
                 } // if ((pid = fork()) < 0) 
             } while (0);

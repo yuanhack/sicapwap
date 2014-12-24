@@ -70,9 +70,7 @@ CWBool ACEnterDataCheck(int WTPIndex, CWProtocolMessage *msgPtr) {
 						seqNum))) { 
 		return CW_FALSE;
 	}
-
-	// Yuan Hong
-	//  可在发送前组包 <特定供应商配置信息> 
+	
 	if(!CWACSendFragments(WTPIndex)) {
 
 		return CW_FALSE;

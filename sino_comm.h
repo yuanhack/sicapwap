@@ -78,7 +78,7 @@ enum {
     UPSTAT_ERR_TFTP,    // tftp下载时错误
     UPSTAT_ERR_MD5,     // md5校验错误,可能md5码错误或文件下载不完整
     UPSTAT_ERR_SAVEINFO,// 正确下载固件和校验成功,但保存信息文件时出错,例如写文件错误
-    UPSTAT_ERR_LACKBUF, // 下载时检查需要保存固件的缓存空间不足
+    UPSTAT_ERR_LACK_SPACE,// 下载固件前时检查/tmp下空间不足
 };
 #define SS_MAGIC 0xffffaaaa
 typedef struct {
