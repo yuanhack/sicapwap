@@ -92,7 +92,6 @@ typedef struct {
 #pragma pack(pop)
 
 int sino_assemble_head(void* buff, int size);
-//int sino_assemble_data(void* buff, int size, int type, uchar* info, int len);
 int sino_fill_head_len(sino_head* head);
 int sino_elem_size(sino_head* head);
 int sino_packet_size(sino_head* head);
@@ -100,7 +99,7 @@ int sino_total_elem_len(sino_head* head);
 
 void        sino_data_init(sino_data *sino);
 int         sino_data_head(sino_data *sino);
-sino_elem*  sino_data_push(sino_data *sino, int type, uchar *info, int len);
+sino_elem*  sino_data_push(sino_data *sino, int type, void *info, int len);
 void        sino_data_elem_pop_init(sino_data *sino);
 sino_elem*  sino_data_elem_pop(sino_data *sino);
 sino_elem * sino_data_elem_pop_first(sino_data *sino); // init + pop 1 times

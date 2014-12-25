@@ -31,12 +31,16 @@
 #include "sino_comm.h"
 #include "read_conf.h"
 #include "yhepoll.h"
+#include "pthread_stack.h"
 
 #include <sys/stat.h>
 
 #ifdef DMALLOC
 #include "../dmalloc-5.5.0/dmalloc.h"
 #endif
+
+// add by Yuan Hong 
+pthread_attr_t g_stack_attr;
 
 /*_________________________________________________________*/
 /*  *******************___VARIABLES___*******************  */
@@ -230,15 +234,26 @@ void CWACInit() {
 		exit(1);
 	}
 
-  // WTP's updata module, load configuration payload
-  // 2014 Sinoix - Yuan Hong
+    // add by Yuan Hong 
+    int err;
+    if ((err = __pthread_attr_init__(&g_thread_stack_attr)) != 0) {
+        CWLog("__pthread_attr_init__() error: %s\n", strerror(err));
+        exit(1);
+    }
+    if ((err = __pthread_attr_setstacksize__(&g_thread_stack_attr,THREAD_STACK_SIZE)) != 0) {
+        CWLog("__pthread_attr_setstacksize__() error: %s\n", strerror(err));
+        exit(1);
+    }
+
+    // WTP's updata module, load configuration payload
+    // 2014 Sinoix - Yuan Hong
 #ifdef SINOIX_PAYLOAD
 
-  void sino_init();
-  sino_init();
+    void sino_init();
+    sino_init();
 
 #endif
-	CWLog("AC Started");
+    CWLog("AC Started");
 }
 
 

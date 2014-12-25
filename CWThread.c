@@ -25,6 +25,7 @@
  *           Mauro Bisson (mauro.bis@gmail.com)                                            *
  *******************************************************************************************/
 
+#include "pthread_stack.h"
 
 #include "CWCommon.h"
 
@@ -48,7 +49,8 @@ CWBool CWCreateThread(CWThread *newThread, CW_THREAD_FUNCTION threadFunc, void *
 	
 	CWDebugLog("Create Thread\n");
 		
-	if(pthread_create(newThread, NULL, threadFunc, arg) != 0) {
+    // modify by Yuan Hong
+	if(pthread_create(newThread, &g_thread_stack_attr, threadFunc, arg) != 0) {
 		return CWErrorRaise(CW_ERROR_NEED_RESOURCE, "Can't create thread (maybe there are too many other threads)");
 	}
 

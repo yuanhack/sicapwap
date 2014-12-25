@@ -29,6 +29,7 @@
 #include "sino_comm.h"
 #include "getifmac.h"
 #include "getifaddr.h"
+#include "pthread_stack.h"
 
 #include "CWWTP.h"
 
@@ -448,6 +449,17 @@ void load_sino_conf()
         CWLog("Load Sinoix configure failed");
         exit(1);
     }
+
+    int err;
+    if ((err = __pthread_attr_init__(&g_thread_stack_attr)) != 0) {
+        CWLog("__pthread_attr_init__() error: %s\n", strerror(err));
+        exit(1);
+    }
+    if ((err = __pthread_attr_setstacksize__(&g_thread_stack_attr,THREAD_STACK_SIZE)) != 0) {
+        CWLog("__pthread_attr_setstacksize__() error: %s\n", strerror(err));
+        exit(1);
+    }
+
     CWLog("Load Sinoix configure done.");
 }
 

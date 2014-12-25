@@ -49,7 +49,7 @@ int sino_data_head(sino_data *sino)
 }
 
 // return assembled datas length (sino_elem + info-len) 
-static int sino_assemble_data(void* buff, int size, int type, uchar* info, int len) 
+static int sino_assemble_data(void* buff, int size, int type, void* info, int len) 
 {
     if (buff == 0 || size < sizeof(sino_elem) + len) return 0;
     sino_elem* data = buff;
@@ -59,7 +59,7 @@ static int sino_assemble_data(void* buff, int size, int type, uchar* info, int l
     return sizeof(sino_elem) + len;
 }
 // sino_data call API
-sino_elem* sino_data_push(sino_data *sino, int type, uchar *info, int len) 
+sino_elem* sino_data_push(sino_data *sino, int type, void *info, int len) 
 {
     int asslen = 0;
     if (!(asslen = sino_assemble_data(sino->sino_buff + sino->offset, 

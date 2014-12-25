@@ -27,6 +27,8 @@
 #include <string.h>	/* memcpy */
 #include "timerlib.h"
 
+#include "pthread_stack.h"  /* add by Yuan Hong */
+
 
 /* time to wait the init of ticker thread in timer_init() function */
 #define INIT_WAIT_TIME	5
@@ -273,7 +275,8 @@ int timer_init() {
 
 	pthread_mutex_lock(&timerq.mutex);
 
-	rv = pthread_create(&timerq.ticker, NULL, cronometer, NULL);
+    // modify by Yuan Hong
+	rv = pthread_create(&timerq.ticker, &g_thread_stack_attr, cronometer, NULL);
 	if (rv != 0) {
 		
 		pthread_mutex_unlock(&timerq.mutex);
