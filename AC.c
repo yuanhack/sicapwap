@@ -34,13 +34,11 @@
 #include "pthread_stack.h"
 
 #include <sys/stat.h>
+#include <sys/resource.h>
 
 #ifdef DMALLOC
 #include "../dmalloc-5.5.0/dmalloc.h"
 #endif
-
-// add by Yuan Hong 
-pthread_attr_t g_stack_attr;
 
 /*_________________________________________________________*/
 /*  *******************___VARIABLES___*******************  */
@@ -242,6 +240,23 @@ void CWACInit() {
     }
     if ((err = __pthread_attr_setstacksize__(&g_thread_stack_attr,THREAD_STACK_SIZE)) != 0) {
         CWLog("__pthread_attr_setstacksize__() error: %s\n", strerror(err));
+        exit(1);
+    }
+
+    struct rlimit rl;
+    if (getrlimit(RLIMIT_NOFILE, &rl) == 0) {
+        CWLog("Process files %ld max=%ld", (long)rl.rlim_cur, (long)rl.rlim_max);
+    } else {
+        CWLog("getrlimit error: %s", strerror(errno));
+        exit(1);
+    }
+
+    rl.rlim_cur = 20000;
+    rl.rlim_max = 20000;
+    if (setrlimit(RLIMIT_NOFILE, &rl) == 0) {
+        CWLog("Set process files %ld max=%ld success", (long)rl.rlim_cur, (long)rl.rlim_max);
+    } else {
+        CWLog("setrlimit error: %s", strerror(errno));
         exit(1);
     }
 
