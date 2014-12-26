@@ -45,7 +45,8 @@
 #include <sys/socket.h>
 /*______________________________________________________*/
 /*  *******************___DEFINE___*******************  */
-#define CW_MAX_WTP				100
+//#define CW_MAX_WTP				100 
+#define CW_MAX_WTP				20000     // modify by Yuan Hong
 #define CW_CRITICAL_TIMER_EXPIRED_SIGNAL	SIGUSR2
 #define CW_SOFT_TIMER_EXPIRED_SIGNAL		SIGUSR1
 #define AC_LOG_FILE_NAME				"/var/log/ac.log.txt"

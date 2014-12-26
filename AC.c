@@ -251,8 +251,8 @@ void CWACInit() {
         exit(1);
     }
 
-    rl.rlim_cur = 20000;
-    rl.rlim_max = 20000;
+    rl.rlim_cur = 30000;
+    rl.rlim_max = 30000;
     if (setrlimit(RLIMIT_NOFILE, &rl) == 0) {
         CWLog("Set process files %ld max=%ld success", (long)rl.rlim_cur, (long)rl.rlim_max);
     } else {
