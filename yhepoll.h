@@ -66,10 +66,10 @@ typedef struct fd_event {
 	fd_event_callback  pri;
 	fd_event_callback  err;
 	fd_event_callback  hup;
-} fd_event, *fd_event_handle;
+} *fd_event_handle;
 
 /* * epoll manager object */
-typedef struct epoll_manager
+struct epoll_manager
 {
 	pthread_mutex_t    lock;    // safe lock
     fd_event           fe;      // epoll fd event
@@ -84,7 +84,7 @@ typedef struct epoll_manager
 	int                maxfds;  // epoll_wait par3 maxevents
     int                nfds;    // epoll_wait's return value
 	struct epoll_event evlist[];// epoll_wait par2 events
-} epoll_manager;
+} ;
 
 
 #ifdef __cplusplus
