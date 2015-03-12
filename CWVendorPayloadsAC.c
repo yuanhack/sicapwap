@@ -148,22 +148,18 @@ CWBool CWAssembleWTPVendorPayloadWUM(CWProtocolMessage *msgPtr) {
 
 // 20141111 Yuan Hong
 #ifdef SINOIX_PAYLOAD
-
 CWBool CWAssembleMsgSinoixVendorPayload(CWProtocolMessage *msgPtr) {
-	CWLog("Assembling Protocol Configuration Update Request [VENDOR CASE] Sinoix...");
-
-	if(msgPtr == NULL) return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
-	// TODO: Vendor Specific Payload Data sino_head;  // Yuan Hong
-	// -------- Vendor Specific Payload Datas --------
-	if(msgPtr == NULL) return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
+  // Vendor Specific Payload Data sino_xxxx;  
+  CWLog("Assembling Protocol Configuration Update Request [sinoix] Message Assembling ...");
+  if(msgPtr == NULL) return CWErrorRaise(CW_ERROR_WRONG_ARG, NULL);
   sino_lock();
-	CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, sino_packet_size(sino.head), 
-      sino_unlock(); return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL); );
-	CWProtocolStoreRawBytes(msgPtr, (char*)sino.head, sino_packet_size(sino.head));
+  CW_CREATE_PROTOCOL_MESSAGE(*msgPtr, sino_packet_size(sino.head), 
+      sino_unlock(); 
+      CWLog("Assembling Protocol Configuration Update Request [sinoix] Message Assembled failed.");
+      return CWErrorRaise(CW_ERROR_OUT_OF_MEMORY, NULL); );
   sino_unlock();
-	CWLog("Assembling Protocol Configuration Update Request [VENDOR CASE] Sinoix: Message Assembled.");
-	return CWAssembleMsgElem(msgPtr, CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE);
+  CWProtocolStoreRawBytes(msgPtr, (char*)sino.head, sino_packet_size(sino.head));
+  CWLog("Assembling Protocol Configuration Update Request [sinoix] Message Assembled done.");
+  return CWAssembleMsgElem(msgPtr, CW_MSG_ELEMENT_VENDOR_SPEC_PAYLOAD_CW_TYPE);
 }
-
 #endif
-
