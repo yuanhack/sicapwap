@@ -32,6 +32,7 @@
 #include "read_conf.h"
 #include "yhepoll.h"
 #include "pthread_stack.h"
+#include "sino_db.h"
 
 #include <sys/stat.h>
 #include <sys/resource.h>
@@ -415,9 +416,23 @@ void sino_config()
 
 void sino_init()
 {
-  sino_config();
-  if (firmware_version[0] == 0)
-      CWLog("Without the firmware file");
+    sino_config();
+    if (firmware_version[0] == 0)
+        CWLog("Without the firmware file");
 
-  sino_service_start();
+    sino_service_start();
+    if (mysql_initialize() < 0) {
+        CWLog("mysql_initialize failed");
+        exit(1);
+    }
+    if (mysql_conn() < 0) {
+        CWLog("mysql_conn failed");
+        exit(1);
+    }
+
+    ap_online("xxxxxxxxxx");
+    sleep(3);
+    ap_offline("xxxxxxxxxx");
+
+        
 }

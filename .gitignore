@@ -5,6 +5,8 @@ cscope.in.out
 cscope.out
 cscope.po.out
 
+.*.swp
+
 ### Source Insight files
 *.IAB
 *.IAD

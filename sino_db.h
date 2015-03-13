@@ -16,7 +16,10 @@ extern char db_name[64];
 extern MYSQL * mysql;
 
 int mysql_initialize();
-int mysql_uninit();
+void mysql_uninit();
+
+int mysql_conn();
+void mysql_disconn();
 
 int ap_online();
 int ap_offline();
